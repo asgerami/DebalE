@@ -136,16 +136,16 @@ export default function ListRoomPage() {
       // Check if user has a profile, create one if not
       let userProfile;
       try {
-        userProfile = await getProfile(user.id);
+        userProfile = await getProfile(userId);
         console.log("Profile found:", userProfile); // Debug log
       } catch (error) {
         console.log(
           "Profile not found, creating new profile for user ID:",
-          user.id
+          userId
         ); // Debug log
         // Profile doesn't exist, create one
         userProfile = await createProfile({
-          id: user.id,
+          id: userId,
           user_type: "provider",
           full_name:
             user.user_metadata?.full_name ||
@@ -170,7 +170,7 @@ export default function ListRoomPage() {
       }
 
       const listingData = {
-        provider_id: user.id,
+        provider_id: userId,
         title: formData.title,
         description: formData.description,
         area: formData.location,
