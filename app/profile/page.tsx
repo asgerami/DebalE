@@ -1,482 +1,179 @@
 "use client";
 
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
+  CardDescription,
 } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { useAuth } from "@/contexts/AuthContext";
-import { useProfile } from "@/hooks/useProfile";
-import { AuthGuard } from "@/components/auth-guard";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2, Camera, Save, X, CheckCircle, Shield } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Mail,
+  Phone,
+  User,
+  Home,
+  Shield,
+  BedDouble,
+  MapPin,
+} from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 
 export default function ProfilePage() {
+  // Mock profile data
+  const profile = {
+    name: "Meron Tadesse",
+    email: "meron.tadesse@example.com",
+    userType: "Room Provider",
+    phone: "+251 911 123 456",
+    location: "Bole, Addis Ababa",
+    bio: "Friendly and responsible. I love meeting new people and helping students find a safe place to stay in Addis.",
+    avatar:
+      "https://images.unsplash.com/photo-1519125323398-675f0ddb6308?ixlib=rb-4.0.3&auto=format&fit=facearea&w=400&h=400&facepad=2&q=80",
+    verified: true,
+    memberSince: "2023",
+  };
+
+  // Mock listings data
+  const listings = [
+    {
+      id: 1,
+      title: "Cozy Room Near AAU Campus",
+      image:
+        "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
+      price: 1500,
+      location: "Sidist Kilo, Addis Ababa",
+      type: "Private Room",
+    },
+    {
+      id: 2,
+      title: "Modern Shared Apartment",
+      image:
+        "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
+      price: 2200,
+      location: "Bole, Addis Ababa",
+      type: "Shared Room",
+    },
+    {
+      id: 3,
+      title: "Budget-Friendly Option",
+      image:
+        "https://images.unsplash.com/photo-1484154218962-a197022b5858?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
+      price: 900,
+      location: "Merkato, Addis Ababa",
+      type: "Shared Room",
+    },
+  ];
+
   return (
-    <AuthGuard>
-      <ProfileContent />
-    </AuthGuard>
-  );
-}
-
-function ProfileContent() {
-  const { user } = useAuth();
-  const { profile, loading, error, saveProfile } = useProfile(user?.id || null);
-  const [isEditing, setIsEditing] = useState(false);
-  const [activeTab, setActiveTab] = useState("profile");
-  const [formData, setFormData] = useState({
-    full_name: "",
-    age: "",
-    gender: "" as "male" | "female" | "any" | "",
-    phone: "",
-    occupation: "",
-    current_location: "",
-    bio: "",
-    languages: [] as string[],
-  });
-  const [isSaving, setIsSaving] = useState(false);
-  const [saveError, setSaveError] = useState("");
-  const [saveSuccess, setSaveSuccess] = useState(false);
-
-  // Initialize form data when profile loads
-  useState(() => {
-    if (profile) {
-      setFormData({
-        full_name: profile.full_name || "",
-        age: profile.age?.toString() || "",
-        gender: profile.gender || "",
-        phone: profile.phone || "",
-        occupation: profile.occupation || "",
-        current_location: profile.current_location || "",
-        bio: profile.bio || "",
-        languages: profile.languages || [],
-      });
-    }
-  });
-
-  const handleInputChange = (field: string, value: string | string[]) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-    setSaveError("");
-  };
-
-  const handleSave = async () => {
-    setIsSaving(true);
-    setSaveError("");
-    setSaveSuccess(false);
-
-    try {
-      const updates = {
-        full_name: formData.full_name,
-        age: formData.age ? parseInt(formData.age) : null,
-        gender: formData.gender || null,
-        phone: formData.phone || null,
-        occupation: formData.occupation || null,
-        current_location: formData.current_location || null,
-        bio: formData.bio || null,
-        languages: formData.languages,
-      };
-
-      await saveProfile(updates);
-      setSaveSuccess(true);
-      setIsEditing(false);
-
-      // Clear success message after 3 seconds
-      setTimeout(() => setSaveSuccess(false), 3000);
-    } catch (err: any) {
-      setSaveError(err.message || "Failed to save profile");
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const handleCancel = () => {
-    if (profile) {
-      setFormData({
-        full_name: profile.full_name || "",
-        age: profile.age?.toString() || "",
-        gender: profile.gender || "",
-        phone: profile.phone || "",
-        occupation: profile.occupation || "",
-        current_location: profile.current_location || "",
-        bio: profile.bio || "",
-        languages: profile.languages || [],
-      });
-    }
-    setIsEditing(false);
-    setSaveError("");
-  };
-
-  const getUserInitials = (name: string) => {
-    return name
-      .split(" ")
-      .map((word) => word[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2);
-  };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Card className="w-[400px]">
-          <CardHeader>
-            <CardTitle>Error</CardTitle>
-            <CardDescription>{error}</CardDescription>
+    <div className="min-h-screen bg-[#FFFEF7] flex flex-col items-center py-12 px-4">
+      <div className="w-full max-w-5xl mx-auto">
+        {/* Profile Card */}
+        <Card className="w-full bg-white border border-[#ECF0F1] rounded-2xl shadow-lg mb-10">
+          <CardHeader className="flex flex-col items-center pt-8 pb-4">
+            <div className="relative w-28 h-28 mb-4">
+              <Image
+                src={profile.avatar}
+                alt={profile.name}
+                width={112}
+                height={112}
+                className="rounded-full object-cover border-4 border-[#F6CB5A]"
+              />
+              {profile.verified && (
+                <span className="absolute bottom-2 right-2 bg-[#2ECC71] text-white rounded-full p-1">
+                  <Shield className="w-4 h-4" />
+                </span>
+              )}
+            </div>
+            <CardTitle className="text-2xl font-bold text-[#3C2A1E] mb-1">
+              {profile.name}
+            </CardTitle>
+            <CardDescription className="text-[#7F8C8D] mb-2">
+              {profile.userType}
+            </CardDescription>
+            <Badge className="bg-[#F6CB5A] text-[#3C2A1E] px-3 py-1">
+              Member since {profile.memberSince}
+            </Badge>
           </CardHeader>
+          <CardContent className="space-y-6 px-8 pb-8">
+            <div className="flex flex-col md:flex-row gap-8 md:gap-16">
+              <div className="flex-1 flex flex-col gap-3">
+                <div className="flex items-center gap-2 text-[#3C2A1E]">
+                  <Mail className="w-4 h-4" />
+                  <span>{profile.email}</span>
+                </div>
+                <div className="flex items-center gap-2 text-[#3C2A1E]">
+                  <Phone className="w-4 h-4" />
+                  <span>{profile.phone}</span>
+                </div>
+                <div className="flex items-center gap-2 text-[#3C2A1E]">
+                  <Home className="w-4 h-4" />
+                  <span>{profile.location}</span>
+                </div>
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-[#3C2A1E] mb-1">
+                  About
+                </h3>
+                <p className="text-[#7F8C8D] leading-relaxed">{profile.bio}</p>
+              </div>
+            </div>
+            <div className="flex justify-end">
+              <Button className="bg-[#F6CB5A] hover:bg-[#E6B84A] text-[#3C2A1E] font-semibold px-6 py-2 rounded-lg shadow-md hover:shadow-lg transition-all duration-200">
+                Edit Profile
+              </Button>
+            </div>
+          </CardContent>
         </Card>
-      </div>
-    );
-  }
 
-  return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      {/* Header */}
-      <header className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <Link
-              href="/"
-              className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
-            >
-              ← Back to Home
-            </Link>
-            <h1 className="text-xl font-semibold">Profile Settings</h1>
-            <div className="w-20"></div> {/* Spacer for centering */}
-          </div>
-        </div>
-      </header>
-
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {saveSuccess && (
-          <Alert className="mb-6">
-            <CheckCircle className="h-4 w-4" />
-            <AlertDescription>Profile updated successfully!</AlertDescription>
-          </Alert>
-        )}
-
-        {saveError && (
-          <Alert variant="destructive" className="mb-6">
-            <AlertDescription>{saveError}</AlertDescription>
-          </Alert>
-        )}
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Profile Card */}
-          <div className="lg:col-span-1">
-            <Card>
-              <CardHeader className="text-center">
-                <div className="relative mx-auto w-24 h-24 mb-4">
-                  <Avatar className="w-24 h-24">
-                    <AvatarImage
-                      src={
-                        profile?.avatar_url || user?.user_metadata?.avatar_url
-                      }
-                    />
-                    <AvatarFallback className="text-2xl">
-                      {getUserInitials(
-                        profile?.full_name ||
-                          user?.user_metadata?.full_name ||
-                          user?.email ||
-                          "U"
-                      )}
-                    </AvatarFallback>
-                  </Avatar>
-                  {isEditing && (
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      className="absolute -bottom-2 -right-2 rounded-full w-8 h-8 p-0"
-                    >
-                      <Camera className="h-4 w-4" />
-                    </Button>
-                  )}
+        {/* Listings Section */}
+        <div className="w-full">
+          <h2 className="text-2xl font-bold text-[#3C2A1E] mb-6">
+            Your Listings
+          </h2>
+          <div className="grid md:grid-cols-3 gap-8">
+            {listings.map((listing) => (
+              <Card
+                key={listing.id}
+                className="bg-white border border-[#ECF0F1] rounded-xl shadow-md hover:shadow-lg transition-shadow duration-200"
+              >
+                <div className="relative w-full h-40">
+                  <Image
+                    src={listing.image}
+                    alt={listing.title}
+                    fill
+                    className="object-cover rounded-t-xl"
+                  />
                 </div>
-                <CardTitle className="text-xl">
-                  {profile?.full_name ||
-                    user?.user_metadata?.full_name ||
-                    "User"}
-                </CardTitle>
-                <CardDescription>
-                  {profile?.user_type === "seeker"
-                    ? "Room Seeker"
-                    : "Room Provider"}
-                </CardDescription>
-                <div className="flex items-center justify-center space-x-2 mt-2">
-                  <Badge variant="secondary">
-                    {profile?.phone_verified ? (
-                      <>
-                        <CheckCircle className="h-3 w-3 mr-1" />
-                        Verified
-                      </>
-                    ) : (
-                      <>
-                        <Shield className="h-3 w-3 mr-1" />
-                        Unverified
-                      </>
-                    )}
-                  </Badge>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="text-sm">
-                    <span className="font-medium text-gray-600 dark:text-gray-400">
-                      Member since:
-                    </span>
-                    <span className="ml-2">
-                      {new Date(
-                        profile?.created_at || Date.now()
-                      ).toLocaleDateString()}
+                <CardContent className="p-4 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-bold text-[#3C2A1E] line-clamp-1">
+                      {listing.title}
+                    </h3>
+                    <span className="text-[#F6CB5A] font-bold text-lg">
+                      {listing.price} Birr
                     </span>
                   </div>
-                  <div className="text-sm">
-                    <span className="font-medium text-gray-600 dark:text-gray-400">
-                      Last active:
-                    </span>
-                    <span className="ml-2">
-                      {new Date(
-                        profile?.last_active || Date.now()
-                      ).toLocaleDateString()}
-                    </span>
+                  <div className="flex items-center text-[#7F8C8D] text-sm mb-1">
+                    <MapPin className="w-4 h-4 mr-1" />
+                    {listing.location}
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Main Content */}
-          <div className="lg:col-span-2">
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="profile">Profile</TabsTrigger>
-                <TabsTrigger value="preferences">Preferences</TabsTrigger>
-                <TabsTrigger value="security">Security</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="profile" className="space-y-6">
-                <Card>
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <CardTitle>Basic Information</CardTitle>
-                        <CardDescription>
-                          Update your personal details
-                        </CardDescription>
-                      </div>
-                      {!isEditing ? (
-                        <Button onClick={() => setIsEditing(true)}>
-                          Edit Profile
-                        </Button>
-                      ) : (
-                        <div className="flex space-x-2">
-                          <Button variant="outline" onClick={handleCancel}>
-                            <X className="h-4 w-4 mr-2" />
-                            Cancel
-                          </Button>
-                          <Button onClick={handleSave} disabled={isSaving}>
-                            {isSaving ? (
-                              <>
-                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                                Saving...
-                              </>
-                            ) : (
-                              <>
-                                <Save className="h-4 w-4 mr-2" />
-                                Save
-                              </>
-                            )}
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="full_name">Full Name *</Label>
-                        <Input
-                          id="full_name"
-                          value={formData.full_name}
-                          onChange={(e) =>
-                            handleInputChange("full_name", e.target.value)
-                          }
-                          disabled={!isEditing}
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="age">Age</Label>
-                        <Input
-                          id="age"
-                          type="number"
-                          value={formData.age}
-                          onChange={(e) =>
-                            handleInputChange("age", e.target.value)
-                          }
-                          disabled={!isEditing}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="gender">Gender</Label>
-                        <Select
-                          value={formData.gender}
-                          onValueChange={(value) =>
-                            handleInputChange("gender", value)
-                          }
-                          disabled={!isEditing}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select gender" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="male">Male</SelectItem>
-                            <SelectItem value="female">Female</SelectItem>
-                            <SelectItem value="any">Any</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="phone">Phone Number</Label>
-                        <Input
-                          id="phone"
-                          type="tel"
-                          value={formData.phone}
-                          onChange={(e) =>
-                            handleInputChange("phone", e.target.value)
-                          }
-                          disabled={!isEditing}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="occupation">Occupation</Label>
-                      <Input
-                        id="occupation"
-                        value={formData.occupation}
-                        onChange={(e) =>
-                          handleInputChange("occupation", e.target.value)
-                        }
-                        disabled={!isEditing}
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="current_location">Current Location</Label>
-                      <Input
-                        id="current_location"
-                        value={formData.current_location}
-                        onChange={(e) =>
-                          handleInputChange("current_location", e.target.value)
-                        }
-                        disabled={!isEditing}
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="bio">About Me</Label>
-                      <Textarea
-                        id="bio"
-                        value={formData.bio}
-                        onChange={(e) =>
-                          handleInputChange("bio", e.target.value)
-                        }
-                        disabled={!isEditing}
-                        rows={4}
-                        placeholder="Tell potential roommates about yourself..."
-                      />
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              <TabsContent value="preferences" className="space-y-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Preferences</CardTitle>
-                    <CardDescription>
-                      Manage your housing preferences
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-gray-600 dark:text-gray-400">
-                      Preference settings will be available soon.
-                    </p>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              <TabsContent value="security" className="space-y-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Security</CardTitle>
-                    <CardDescription>
-                      Manage your account security
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="flex items-center justify-between p-4 border rounded-lg">
-                      <div>
-                        <h3 className="font-medium">Password</h3>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                          Update your password to keep your account secure
-                        </p>
-                      </div>
-                      <Link href="/forgot-password">
-                        <Button variant="outline">Change Password</Button>
-                      </Link>
-                    </div>
-
-                    <div className="flex items-center justify-between p-4 border rounded-lg">
-                      <div>
-                        <h3 className="font-medium">Phone Verification</h3>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                          {profile?.phone_verified
-                            ? "Your phone number is verified"
-                            : "Verify your phone number for added security"}
-                        </p>
-                      </div>
-                      <Button
-                        variant="outline"
-                        disabled={profile?.phone_verified}
-                      >
-                        {profile?.phone_verified ? "Verified" : "Verify Phone"}
+                  <div className="flex items-center text-[#7F8C8D] text-xs">
+                    <BedDouble className="w-4 h-4 mr-1" />
+                    {listing.type}
+                  </div>
+                  <div className="flex justify-end pt-2">
+                    <Link href={`/listing/${listing.id}`}>
+                      <Button className="bg-[#F6CB5A] hover:bg-[#E6B84A] text-[#3C2A1E] font-semibold px-4 py-1 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 text-sm">
+                        View
                       </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-            </Tabs>
+                    </Link>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
           </div>
         </div>
       </div>

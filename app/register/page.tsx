@@ -348,7 +348,7 @@ export default function RegisterPage() {
                           onChange={(e) =>
                             handleInputChange("email", e.target.value)
                           }
-                          className="bg-white border-2 border-[#ECF0F1] focus:border-[#F6CB5A] focus:ring-4 focus:ring-[#F6CB5A]/20 rounded-xl px-4 py-3 text-[#3C2A1E] placeholder-[#7F8C8D] transition-all duration-200"
+                          className="bg-white border-2 border-[#ECF0F1] focus:border-[#F6CB5A] focus:ring-4 focus:ring-[#F6CB5A]/20 rounded-xl px-4 py-3 pl-12 text-[#3C2A1E] placeholder-[#7F8C8D] transition-all duration-200"
                           required
                         />
                       </div>
@@ -369,7 +369,7 @@ export default function RegisterPage() {
                             onChange={(e) =>
                               handleInputChange("password", e.target.value)
                             }
-                            className="pr-10 bg-white border-2 border-[#ECF0F1] focus:border-[#F6CB5A] focus:ring-4 focus:ring-[#F6CB5A]/20 rounded-xl px-4 py-3 text-[#3C2A1E] placeholder-[#7F8C8D] transition-all duration-200"
+                            className="pr-10 bg-white border-2 border-[#ECF0F1] focus:border-[#F6CB5A] focus:ring-4 focus:ring-[#F6CB5A]/20 rounded-xl px-4 py-3 pl-12 text-[#3C2A1E] placeholder-[#7F8C8D] transition-all duration-200"
                             required
                           />
                           <button
@@ -405,7 +405,7 @@ export default function RegisterPage() {
                                 e.target.value
                               )
                             }
-                            className="pr-10 bg-white border-2 border-[#ECF0F1] focus:border-[#F6CB5A] focus:ring-4 focus:ring-[#F6CB5A]/20 rounded-xl px-4 py-3 text-[#3C2A1E] placeholder-[#7F8C8D] transition-all duration-200"
+                            className="pr-10 bg-white border-2 border-[#ECF0F1] focus:border-[#F6CB5A] focus:ring-4 focus:ring-[#F6CB5A]/20 rounded-xl px-4 py-3 pl-12 text-[#3C2A1E] placeholder-[#7F8C8D] transition-all duration-200"
                             required
                           />
                           <button
