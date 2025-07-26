@@ -1,30 +1,116 @@
-# DebalE Design
+# DebalE
 
-*Automatically synced with your [v0.dev](https://v0.dev) deployments*
+A modern web application built with Next.js, React, and TypeScript.
 
-[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/amir-amans-projects/v0-debal-e-design)
-[![Built with v0](https://img.shields.io/badge/Built%20with-v0.dev-black?style=for-the-badge)](https://v0.dev/chat/projects/D1dLOhJFTQ8)
+## Features
 
-## Overview
+- Modern UI components with Radix UI
+- Responsive design with Tailwind CSS
+- Type-safe development with TypeScript
+- Form handling with React Hook Form
+- Theme support with next-themes
 
-This repository will stay in sync with your deployed chats on [v0.dev](https://v0.dev).
-Any changes you make to your deployed app will be automatically pushed to this repository from [v0.dev](https://v0.dev).
+## Getting Started
 
-## Deployment
+1. Install dependencies:
 
-Your project is live at:
+   ```bash
+   npm install
+   # or
+   pnpm install
+   # or
+   yarn install
+   ```
 
-**[https://vercel.com/amir-amans-projects/v0-debal-e-design](https://vercel.com/amir-amans-projects/v0-debal-e-design)**
+2. Run the development server:
 
-## Build your app
+   ```bash
+   npm run dev
+   # or
+   pnpm dev
+   # or
+   yarn dev
+   ```
 
-Continue building your app on:
+3. Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-**[https://v0.dev/chat/projects/D1dLOhJFTQ8](https://v0.dev/chat/projects/D1dLOhJFTQ8)**
+## Available Scripts
 
-## How It Works
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run start` - Start production server
+- `npm run lint` - Run ESLint
 
-1. Create and modify your project using [v0.dev](https://v0.dev)
-2. Deploy your chats from the v0 interface
-3. Changes are automatically pushed to this repository
-4. Vercel deploys the latest version from this repository
+## Tech Stack
+
+- **Framework**: Next.js 15
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS
+- **UI Components**: Radix UI
+- **Icons**: Lucide React
+- **Forms**: React Hook Form + Zod
+- **Theming**: next-themes
+
+## Backend Integration (Supabase)
+
+### Supabase Client Setup
+
+- The Supabase client is configured in `lib/supabase.ts`.
+- TypeScript types for main tables (profiles, listings, messages, matches) are included for type safety.
+
+### CRUD Utilities
+
+- Use functions from `lib/supabase-crud.ts` for all main operations:
+
+```ts
+import {
+  getProfile,
+  createProfile,
+  updateProfile,
+  getActiveListings,
+  createListing,
+  updateListing,
+} from "./lib/supabase-crud";
+
+// Fetch a user profile
+const profile = await getProfile(userId);
+
+// Create a new listing
+const newListing = await createListing({
+  provider_id: userId,
+  title: "Modern Room in Bole",
+  monthly_rent: 2000,
+  area: "Bole",
+  room_type: "private",
+  // ...other fields
+});
+```
+
+### Real-time Messaging
+
+- Subscribe to new messages for a match:
+
+```ts
+import { subscribeToMessages } from "./lib/supabase-crud";
+
+const subscription = subscribeToMessages(matchId, (message) => {
+  // Handle new message
+  console.log("New message:", message);
+});
+```
+
+### Storage Uploads
+
+- Upload a photo to a listing or profile:
+
+```ts
+import { uploadListingPhoto, uploadProfilePhoto } from "./lib/supabase-crud";
+
+await uploadListingPhoto(file, listingId);
+await uploadProfilePhoto(file, userId);
+```
+
+---
+
+- All utilities throw on error, so wrap in try/catch for error handling.
+- See `lib/supabase-crud.ts` for more details and extend as needed for your app.

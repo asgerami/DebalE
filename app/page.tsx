@@ -1,10 +1,22 @@
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { Search, MapPin, Users, Shield, Star, Coffee, Home, MessageCircle, ArrowRight, Menu, User } from "lucide-react"
-import Link from "next/link"
-import Image from "next/image"
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import {
+  Search,
+  MapPin,
+  Users,
+  Shield,
+  Star,
+  Coffee,
+  Home,
+  MessageCircle,
+  ArrowRight,
+  User,
+} from "lucide-react";
+import Link from "next/link";
+import Image from "next/image";
+import MobileNav from "@/components/mobile-nav";
 
 export default function LandingPage() {
   return (
@@ -20,13 +32,22 @@ export default function LandingPage() {
           </div>
 
           <nav className="hidden md:flex items-center space-x-8">
-            <Link href="/search" className="text-[#7F8C8D] hover:text-[#3C2A1E] font-medium transition-colors">
+            <Link
+              href="/search"
+              className="text-[#7F8C8D] hover:text-[#3C2A1E] font-medium transition-colors"
+            >
               Find Rooms
             </Link>
-            <Link href="/list-room" className="text-[#7F8C8D] hover:text-[#3C2A1E] font-medium transition-colors">
+            <Link
+              href="/list-room"
+              className="text-[#7F8C8D] hover:text-[#3C2A1E] font-medium transition-colors"
+            >
               List Room
             </Link>
-            <Link href="/how-it-works" className="text-[#7F8C8D] hover:text-[#3C2A1E] font-medium transition-colors">
+            <Link
+              href="/how-it-works"
+              className="text-[#7F8C8D] hover:text-[#3C2A1E] font-medium transition-colors"
+            >
               How It Works
             </Link>
             <Link
@@ -42,9 +63,7 @@ export default function LandingPage() {
             </Link>
           </nav>
 
-          <Button variant="ghost" className="md:hidden">
-            <Menu className="w-6 h-6 text-[#3C2A1E]" />
-          </Button>
+          <MobileNav />
         </div>
       </header>
 
@@ -54,14 +73,17 @@ export default function LandingPage() {
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="space-y-8">
               <div className="space-y-4">
-                <Badge className="bg-[#FDF8F0] text-[#F6CB5A] border-[#F6CB5A] px-4 py-2">🇪🇹 Made for Ethiopia</Badge>
+                <Badge className="bg-[#FDF8F0] text-[#F6CB5A] border-[#F6CB5A] px-4 py-2">
+                  🇪🇹 Made for Ethiopia
+                </Badge>
                 <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-[#3C2A1E] leading-tight">
                   Find Your Perfect
                   <span className="text-[#F6CB5A]"> Roommate</span> in Ethiopia
                 </h1>
                 <p className="text-xl text-[#7F8C8D] leading-relaxed">
-                  Connect with trusted students and young professionals. Safe, affordable, and culturally-aware housing
-                  solutions across Ethiopian cities.
+                  Connect with trusted students and young professionals. Safe,
+                  affordable, and culturally-aware housing solutions across
+                  Ethiopian cities.
                 </p>
               </div>
 
@@ -82,12 +104,18 @@ export default function LandingPage() {
 
               <div className="flex items-center space-x-8 pt-4">
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-[#3C2A1E]">5,000+</div>
+                  <div className="text-2xl font-bold text-[#3C2A1E]">
+                    5,000+
+                  </div>
                   <div className="text-sm text-[#7F8C8D]">Active Users</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-[#3C2A1E]">1,200+</div>
-                  <div className="text-sm text-[#7F8C8D]">Successful Matches</div>
+                  <div className="text-2xl font-bold text-[#3C2A1E]">
+                    1,200+
+                  </div>
+                  <div className="text-sm text-[#7F8C8D]">
+                    Successful Matches
+                  </div>
                 </div>
                 <div className="text-center">
                   <div className="text-2xl font-bold text-[#3C2A1E]">15+</div>
@@ -108,7 +136,9 @@ export default function LandingPage() {
                 <div className="absolute -bottom-4 -left-4 bg-[#FFFEF7] rounded-lg p-4 shadow-lg border border-[#ECF0F1]">
                   <div className="flex items-center space-x-2">
                     <div className="w-3 h-3 bg-[#2ECC71] rounded-full animate-pulse"></div>
-                    <span className="text-sm font-medium text-[#3C2A1E]">2,341 rooms available</span>
+                    <span className="text-sm font-medium text-[#3C2A1E]">
+                      2,341 rooms available
+                    </span>
                   </div>
                 </div>
               </div>
@@ -121,28 +151,38 @@ export default function LandingPage() {
       <section className="py-12 bg-[#FDF8F0]">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-8">
-            <h2 className="text-2xl font-bold text-[#3C2A1E] mb-2">Start Your Search</h2>
-            <p className="text-[#7F8C8D]">Find rooms in your preferred area and budget</p>
+            <h2 className="text-2xl font-bold text-[#3C2A1E] mb-2">
+              Start Your Search
+            </h2>
+            <p className="text-[#7F8C8D]">
+              Find rooms in your preferred area and budget
+            </p>
           </div>
 
           <Card className="bg-[#FFFEF7] border border-[#ECF0F1] rounded-xl p-6 shadow-sm">
             <div className="grid md:grid-cols-4 gap-4">
               <div className="space-y-2">
-                <label className="font-semibold text-[#7F8C8D] text-sm">Location</label>
+                <label className="font-semibold text-[#7F8C8D] text-sm">
+                  Location
+                </label>
                 <Input
                   placeholder="Addis Ababa, Bole..."
                   className="bg-[#FFFEF7] border border-[#BDC3C7] focus:border-[#F6CB5A] focus:ring-2 focus:ring-[#F6CB5A]/20 rounded-md px-4 py-3 text-[#3C2A1E] placeholder-[#7F8C8D]"
                 />
               </div>
               <div className="space-y-2">
-                <label className="font-semibold text-[#7F8C8D] text-sm">Budget (Birr/month)</label>
+                <label className="font-semibold text-[#7F8C8D] text-sm">
+                  Budget (Birr/month)
+                </label>
                 <Input
                   placeholder="1000 - 3000"
                   className="bg-[#FFFEF7] border border-[#BDC3C7] focus:border-[#F6CB5A] focus:ring-2 focus:ring-[#F6CB5A]/20 rounded-md px-4 py-3 text-[#3C2A1E] placeholder-[#7F8C8D]"
                 />
               </div>
               <div className="space-y-2">
-                <label className="font-semibold text-[#7F8C8D] text-sm">Room Type</label>
+                <label className="font-semibold text-[#7F8C8D] text-sm">
+                  Room Type
+                </label>
                 <Input
                   placeholder="Private room"
                   className="bg-[#FFFEF7] border border-[#BDC3C7] focus:border-[#F6CB5A] focus:ring-2 focus:ring-[#F6CB5A]/20 rounded-md px-4 py-3 text-[#3C2A1E] placeholder-[#7F8C8D]"
@@ -163,9 +203,12 @@ export default function LandingPage() {
       <section className="py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-[#3C2A1E] mb-4">How DebalE Works</h2>
+            <h2 className="text-3xl font-bold text-[#3C2A1E] mb-4">
+              How DebalE Works
+            </h2>
             <p className="text-xl text-[#7F8C8D] max-w-2xl mx-auto">
-              Simple, safe, and effective way to find your ideal living situation
+              Simple, safe, and effective way to find your ideal living
+              situation
             </p>
           </div>
 
@@ -174,9 +217,12 @@ export default function LandingPage() {
               <div className="w-16 h-16 bg-[#F6CB5A] rounded-full flex items-center justify-center mx-auto">
                 <User className="w-8 h-8 text-[#3C2A1E]" />
               </div>
-              <h3 className="text-xl font-bold text-[#3C2A1E]">Create Profile</h3>
+              <h3 className="text-xl font-bold text-[#3C2A1E]">
+                Create Profile
+              </h3>
               <p className="text-[#7F8C8D]">
-                Tell us about yourself, your preferences, and what you're looking for in a roommate or room.
+                Tell us about yourself, your preferences, and what you're
+                looking for in a roommate or room.
               </p>
             </div>
 
@@ -184,9 +230,12 @@ export default function LandingPage() {
               <div className="w-16 h-16 bg-[#F6CB5A] rounded-full flex items-center justify-center mx-auto">
                 <Search className="w-8 h-8 text-[#3C2A1E]" />
               </div>
-              <h3 className="text-xl font-bold text-[#3C2A1E]">Smart Matching</h3>
+              <h3 className="text-xl font-bold text-[#3C2A1E]">
+                Smart Matching
+              </h3>
               <p className="text-[#7F8C8D]">
-                Our algorithm finds compatible matches based on location, budget, lifestyle, and preferences.
+                Our algorithm finds compatible matches based on location,
+                budget, lifestyle, and preferences.
               </p>
             </div>
 
@@ -194,9 +243,12 @@ export default function LandingPage() {
               <div className="w-16 h-16 bg-[#F6CB5A] rounded-full flex items-center justify-center mx-auto">
                 <MessageCircle className="w-8 h-8 text-[#3C2A1E]" />
               </div>
-              <h3 className="text-xl font-bold text-[#3C2A1E]">Connect Safely</h3>
+              <h3 className="text-xl font-bold text-[#3C2A1E]">
+                Connect Safely
+              </h3>
               <p className="text-[#7F8C8D]">
-                Chat securely, meet in safe locations, and move in with confidence using our verification system.
+                Chat securely, meet in safe locations, and move in with
+                confidence using our verification system.
               </p>
             </div>
           </div>
@@ -207,8 +259,12 @@ export default function LandingPage() {
       <section className="py-16 bg-[#FDF8F0]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-[#3C2A1E] mb-4">Why Choose DebalE?</h2>
-            <p className="text-xl text-[#7F8C8D]">Built specifically for the Ethiopian market</p>
+            <h2 className="text-3xl font-bold text-[#3C2A1E] mb-4">
+              Why Choose DebalE?
+            </h2>
+            <p className="text-xl text-[#7F8C8D]">
+              Built specifically for the Ethiopian market
+            </p>
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -217,9 +273,12 @@ export default function LandingPage() {
                 <div className="w-12 h-12 bg-[#F6CB5A] rounded-lg flex items-center justify-center">
                   <Shield className="w-6 h-6 text-[#3C2A1E]" />
                 </div>
-                <h3 className="text-xl font-bold text-[#3C2A1E]">Verified Profiles</h3>
+                <h3 className="text-xl font-bold text-[#3C2A1E]">
+                  Verified Profiles
+                </h3>
                 <p className="text-[#7F8C8D]">
-                  All users are verified with phone numbers, student IDs, or employment letters for your safety.
+                  All users are verified with phone numbers, student IDs, or
+                  employment letters for your safety.
                 </p>
               </CardContent>
             </Card>
@@ -229,9 +288,12 @@ export default function LandingPage() {
                 <div className="w-12 h-12 bg-[#F6CB5A] rounded-lg flex items-center justify-center">
                   <MapPin className="w-6 h-6 text-[#3C2A1E]" />
                 </div>
-                <h3 className="text-xl font-bold text-[#3C2A1E]">Local Expertise</h3>
+                <h3 className="text-xl font-bold text-[#3C2A1E]">
+                  Local Expertise
+                </h3>
                 <p className="text-[#7F8C8D]">
-                  Deep understanding of Ethiopian cities, universities, and cultural preferences.
+                  Deep understanding of Ethiopian cities, universities, and
+                  cultural preferences.
                 </p>
               </CardContent>
             </Card>
@@ -241,9 +303,12 @@ export default function LandingPage() {
                 <div className="w-12 h-12 bg-[#F6CB5A] rounded-lg flex items-center justify-center">
                   <Users className="w-6 h-6 text-[#3C2A1E]" />
                 </div>
-                <h3 className="text-xl font-bold text-[#3C2A1E]">Cultural Matching</h3>
+                <h3 className="text-xl font-bold text-[#3C2A1E]">
+                  Cultural Matching
+                </h3>
                 <p className="text-[#7F8C8D]">
-                  Find roommates who share your cultural values, language preferences, and lifestyle.
+                  Find roommates who share your cultural values, language
+                  preferences, and lifestyle.
                 </p>
               </CardContent>
             </Card>
@@ -253,9 +318,12 @@ export default function LandingPage() {
                 <div className="w-12 h-12 bg-[#F6CB5A] rounded-lg flex items-center justify-center">
                   <Coffee className="w-6 h-6 text-[#3C2A1E]" />
                 </div>
-                <h3 className="text-xl font-bold text-[#3C2A1E]">Affordable Options</h3>
+                <h3 className="text-xl font-bold text-[#3C2A1E]">
+                  Affordable Options
+                </h3>
                 <p className="text-[#7F8C8D]">
-                  From budget-friendly shared rooms to premium private spaces, options for every budget.
+                  From budget-friendly shared rooms to premium private spaces,
+                  options for every budget.
                 </p>
               </CardContent>
             </Card>
@@ -265,9 +333,12 @@ export default function LandingPage() {
                 <div className="w-12 h-12 bg-[#F6CB5A] rounded-lg flex items-center justify-center">
                   <MessageCircle className="w-6 h-6 text-[#3C2A1E]" />
                 </div>
-                <h3 className="text-xl font-bold text-[#3C2A1E]">Multi-Language Support</h3>
+                <h3 className="text-xl font-bold text-[#3C2A1E]">
+                  Multi-Language Support
+                </h3>
                 <p className="text-[#7F8C8D]">
-                  Available in Amharic, English, and Oromo to serve all Ethiopian communities.
+                  Available in Amharic, English, and Oromo to serve all
+                  Ethiopian communities.
                 </p>
               </CardContent>
             </Card>
@@ -277,9 +348,12 @@ export default function LandingPage() {
                 <div className="w-12 h-12 bg-[#F6CB5A] rounded-lg flex items-center justify-center">
                   <Star className="w-6 h-6 text-[#3C2A1E]" />
                 </div>
-                <h3 className="text-xl font-bold text-[#3C2A1E]">Community Reviews</h3>
+                <h3 className="text-xl font-bold text-[#3C2A1E]">
+                  Community Reviews
+                </h3>
                 <p className="text-[#7F8C8D]">
-                  Read reviews from previous roommates and landlords to make informed decisions.
+                  Read reviews from previous roommates and landlords to make
+                  informed decisions.
                 </p>
               </CardContent>
             </Card>
@@ -291,8 +365,12 @@ export default function LandingPage() {
       <section className="py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-[#3C2A1E] mb-4">What Our Users Say</h2>
-            <p className="text-xl text-[#7F8C8D]">Real stories from the DebalE community</p>
+            <h2 className="text-3xl font-bold text-[#3C2A1E] mb-4">
+              What Our Users Say
+            </h2>
+            <p className="text-xl text-[#7F8C8D]">
+              Real stories from the DebalE community
+            </p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
@@ -300,12 +378,15 @@ export default function LandingPage() {
               <CardContent className="p-0 space-y-4">
                 <div className="flex items-center space-x-1">
                   {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="w-4 h-4 fill-[#F6CB5A] text-[#F6CB5A]" />
+                    <Star
+                      key={i}
+                      className="w-4 h-4 fill-[#F6CB5A] text-[#F6CB5A]"
+                    />
                   ))}
                 </div>
                 <p className="text-[#3C2A1E] italic">
-                  "DebalE helped me find the perfect roommate for my studies at AAU. The cultural matching feature is
-                  amazing!"
+                  "DebalE helped me find the perfect roommate for my studies at
+                  AAU. The cultural matching feature is amazing!"
                 </p>
                 <div className="flex items-center space-x-3">
                   <Image
@@ -327,12 +408,15 @@ export default function LandingPage() {
               <CardContent className="p-0 space-y-4">
                 <div className="flex items-center space-x-1">
                   {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="w-4 h-4 fill-[#F6CB5A] text-[#F6CB5A]" />
+                    <Star
+                      key={i}
+                      className="w-4 h-4 fill-[#F6CB5A] text-[#F6CB5A]"
+                    />
                   ))}
                 </div>
                 <p className="text-[#3C2A1E] italic">
-                  "As a young professional new to Addis, DebalE made finding affordable housing so much easier and
-                  safer."
+                  "As a young professional new to Addis, DebalE made finding
+                  affordable housing so much easier and safer."
                 </p>
                 <div className="flex items-center space-x-3">
                   <Image
@@ -343,8 +427,12 @@ export default function LandingPage() {
                     className="rounded-full object-cover"
                   />
                   <div>
-                    <div className="font-semibold text-[#3C2A1E]">Daniel K.</div>
-                    <div className="text-sm text-[#7F8C8D]">Software Developer</div>
+                    <div className="font-semibold text-[#3C2A1E]">
+                      Daniel K.
+                    </div>
+                    <div className="text-sm text-[#7F8C8D]">
+                      Software Developer
+                    </div>
                   </div>
                 </div>
               </CardContent>
@@ -354,12 +442,15 @@ export default function LandingPage() {
               <CardContent className="p-0 space-y-4">
                 <div className="flex items-center space-x-1">
                   {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="w-4 h-4 fill-[#F6CB5A] text-[#F6CB5A]" />
+                    <Star
+                      key={i}
+                      className="w-4 h-4 fill-[#F6CB5A] text-[#F6CB5A]"
+                    />
                   ))}
                 </div>
                 <p className="text-[#3C2A1E] italic">
-                  "I found great tenants for my extra rooms through DebalE. The verification system gives me peace of
-                  mind."
+                  "I found great tenants for my extra rooms through DebalE. The
+                  verification system gives me peace of mind."
                 </p>
                 <div className="flex items-center space-x-3">
                   <Image
@@ -383,9 +474,12 @@ export default function LandingPage() {
       {/* CTA Section */}
       <section className="py-16 bg-gradient-to-r from-[#F6CB5A] to-[#E6B84A]">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold text-[#3C2A1E] mb-4">Ready to Find Your Perfect Match?</h2>
+          <h2 className="text-3xl md:text-4xl font-bold text-[#3C2A1E] mb-4">
+            Ready to Find Your Perfect Match?
+          </h2>
           <p className="text-xl text-[#3C2A1E] mb-8 opacity-90">
-            Join thousands of Ethiopian students and professionals who found their ideal living situation
+            Join thousands of Ethiopian students and professionals who found
+            their ideal living situation
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/register">
@@ -415,20 +509,30 @@ export default function LandingPage() {
                 <span className="text-xl font-bold">DebalE</span>
               </div>
               <p className="text-[#7F8C8D]">
-                Connecting Ethiopian students and young professionals with safe, affordable housing solutions.
+                Connecting Ethiopian students and young professionals with safe,
+                affordable housing solutions.
               </p>
             </div>
 
             <div className="space-y-4">
               <h3 className="font-bold text-lg">For Room Seekers</h3>
               <div className="space-y-2">
-                <Link href="/search" className="block text-[#7F8C8D] hover:text-[#F6CB5A] transition-colors">
+                <Link
+                  href="/search"
+                  className="block text-[#7F8C8D] hover:text-[#F6CB5A] transition-colors"
+                >
                   Find Rooms
                 </Link>
-                <Link href="/how-it-works" className="block text-[#7F8C8D] hover:text-[#F6CB5A] transition-colors">
+                <Link
+                  href="/how-it-works"
+                  className="block text-[#7F8C8D] hover:text-[#F6CB5A] transition-colors"
+                >
                   How It Works
                 </Link>
-                <Link href="/safety" className="block text-[#7F8C8D] hover:text-[#F6CB5A] transition-colors">
+                <Link
+                  href="/safety"
+                  className="block text-[#7F8C8D] hover:text-[#F6CB5A] transition-colors"
+                >
                   Safety Tips
                 </Link>
               </div>
@@ -437,13 +541,22 @@ export default function LandingPage() {
             <div className="space-y-4">
               <h3 className="font-bold text-lg">For Room Providers</h3>
               <div className="space-y-2">
-                <Link href="/list-room" className="block text-[#7F8C8D] hover:text-[#F6CB5A] transition-colors">
+                <Link
+                  href="/list-room"
+                  className="block text-[#7F8C8D] hover:text-[#F6CB5A] transition-colors"
+                >
                   List Your Room
                 </Link>
-                <Link href="/pricing" className="block text-[#7F8C8D] hover:text-[#F6CB5A] transition-colors">
+                <Link
+                  href="/pricing"
+                  className="block text-[#7F8C8D] hover:text-[#F6CB5A] transition-colors"
+                >
                   Pricing
                 </Link>
-                <Link href="/resources" className="block text-[#7F8C8D] hover:text-[#F6CB5A] transition-colors">
+                <Link
+                  href="/resources"
+                  className="block text-[#7F8C8D] hover:text-[#F6CB5A] transition-colors"
+                >
                   Resources
                 </Link>
               </div>
@@ -452,13 +565,22 @@ export default function LandingPage() {
             <div className="space-y-4">
               <h3 className="font-bold text-lg">Support</h3>
               <div className="space-y-2">
-                <Link href="/help" className="block text-[#7F8C8D] hover:text-[#F6CB5A] transition-colors">
+                <Link
+                  href="/help"
+                  className="block text-[#7F8C8D] hover:text-[#F6CB5A] transition-colors"
+                >
                   Help Center
                 </Link>
-                <Link href="/contact" className="block text-[#7F8C8D] hover:text-[#F6CB5A] transition-colors">
+                <Link
+                  href="/contact"
+                  className="block text-[#7F8C8D] hover:text-[#F6CB5A] transition-colors"
+                >
                   Contact Us
                 </Link>
-                <Link href="/privacy" className="block text-[#7F8C8D] hover:text-[#F6CB5A] transition-colors">
+                <Link
+                  href="/privacy"
+                  className="block text-[#7F8C8D] hover:text-[#F6CB5A] transition-colors"
+                >
                   Privacy Policy
                 </Link>
               </div>
@@ -466,10 +588,12 @@ export default function LandingPage() {
           </div>
 
           <div className="border-t border-[#7F8C8D] mt-8 pt-8 text-center">
-            <p className="text-[#7F8C8D]">© 2024 DebalE. Made with ❤️ for Ethiopia. All rights reserved.</p>
+            <p className="text-[#7F8C8D]">
+              © 2024 DebalE. Made with ❤️ for Ethiopia. All rights reserved.
+            </p>
           </div>
         </div>
       </footer>
     </div>
-  )
+  );
 }
