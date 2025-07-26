@@ -22,7 +22,19 @@ A modern web application built with Next.js, React, and TypeScript.
    yarn install
    ```
 
-2. Run the development server:
+2. Set up environment variables:
+
+   Create a `.env.local` file in the root directory with the following variables:
+
+   ```bash
+   # Supabase Configuration
+   NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url_here
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key_here
+   ```
+
+   **Note**: The `NEXT_PUBLIC_` prefix is required for client-side access in Next.js. These keys are safe to expose in the browser as they are the public anon key.
+
+3. Run the development server:
 
    ```bash
    npm run dev
@@ -32,7 +44,7 @@ A modern web application built with Next.js, React, and TypeScript.
    yarn dev
    ```
 
-3. Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+4. Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
 ## Available Scripts
 
