@@ -1,10 +1,10 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import {
   ArrowLeft,
   Coffee,
@@ -19,9 +19,10 @@ import {
   Calendar,
   CheckCircle,
   Clock,
-} from "lucide-react"
-import Link from "next/link"
-import Image from "next/image"
+} from "lucide-react";
+import Link from "next/link";
+import Image from "next/image";
+import { useMessages } from "../../hooks/useMessages";
 
 const mockConversations = [
   {
@@ -38,7 +39,8 @@ const mockConversations = [
   {
     id: 2,
     name: "Daniel Kebede",
-    lastMessage: "Thanks for your interest! Let me know if you have any questions.",
+    lastMessage:
+      "Thanks for your interest! Let me know if you have any questions.",
     timestamp: "1 hour ago",
     unread: 0,
     avatar: "D",
@@ -68,7 +70,7 @@ const mockConversations = [
     roomTitle: "Professional's Choice",
     roomPrice: 2800,
   },
-]
+];
 
 const mockMessages = [
   {
@@ -81,7 +83,8 @@ const mockMessages = [
   {
     id: 2,
     sender: "me",
-    message: "Great! Can you tell me more about the neighborhood and the current roommates?",
+    message:
+      "Great! Can you tell me more about the neighborhood and the current roommates?",
     timestamp: "10:32 AM",
     status: "delivered",
   },
@@ -99,7 +102,10 @@ const mockMessages = [
     message: "Here are some photos of the common areas",
     timestamp: "10:36 AM",
     status: "delivered",
-    images: ["/placeholder.svg?height=200&width=300", "/placeholder.svg?height=200&width=300"],
+    images: [
+      "/placeholder.svg?height=200&width=300",
+      "/placeholder.svg?height=200&width=300",
+    ],
   },
   {
     id: 5,
@@ -115,26 +121,32 @@ const mockMessages = [
     timestamp: "Just now",
     status: "delivered",
   },
-]
+];
 
 export default function MessagesPage() {
-  const [selectedConversation, setSelectedConversation] = useState(mockConversations[0])
-  const [newMessage, setNewMessage] = useState("")
-  const [searchQuery, setSearchQuery] = useState("")
+  // Replace with actual matchId and userId from your app context
+  const matchId = "REPLACE_WITH_MATCH_ID";
+  const userId = "REPLACE_WITH_AUTH_USER_ID";
+  const { messages, loading, error, send } = useMessages(matchId, userId);
+  const [selectedConversation, setSelectedConversation] = useState(
+    mockConversations[0]
+  );
+  const [newMessage, setNewMessage] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
 
   const handleSendMessage = () => {
     if (newMessage.trim()) {
       // Handle sending message
-      console.log("Sending message:", newMessage)
-      setNewMessage("")
+      console.log("Sending message:", newMessage);
+      setNewMessage("");
     }
-  }
+  };
 
   const filteredConversations = mockConversations.filter(
     (conv) =>
       conv.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      conv.roomTitle.toLowerCase().includes(searchQuery.toLowerCase()),
-  )
+      conv.roomTitle.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <div className="min-h-screen bg-[#FFFEF7]">
@@ -144,7 +156,9 @@ export default function MessagesPage() {
           <div className="flex items-center space-x-4">
             <Link href="/dashboard" className="flex items-center space-x-2">
               <ArrowLeft className="w-5 h-5 text-[#7F8C8D]" />
-              <span className="text-[#7F8C8D] hover:text-[#3C2A1E]">Back to Dashboard</span>
+              <span className="text-[#7F8C8D] hover:text-[#3C2A1E]">
+                Back to Dashboard
+              </span>
             </Link>
           </div>
 
@@ -165,7 +179,9 @@ export default function MessagesPage() {
               <CardContent className="p-0 h-full flex flex-col">
                 {/* Search Header */}
                 <div className="p-4 border-b border-[#ECF0F1]">
-                  <h2 className="text-xl font-bold text-[#3C2A1E] mb-4">Messages</h2>
+                  <h2 className="text-xl font-bold text-[#3C2A1E] mb-4">
+                    Messages
+                  </h2>
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#7F8C8D]" />
                     <Input
@@ -184,13 +200,17 @@ export default function MessagesPage() {
                       key={conversation.id}
                       onClick={() => setSelectedConversation(conversation)}
                       className={`w-full p-4 border-b border-[#ECF0F1] hover:bg-[#FDF8F0] transition-colors text-left ${
-                        selectedConversation.id === conversation.id ? "bg-[#FDF8F0] border-r-2 border-r-[#F6CB5A]" : ""
+                        selectedConversation.id === conversation.id
+                          ? "bg-[#FDF8F0] border-r-2 border-r-[#F6CB5A]"
+                          : ""
                       }`}
                     >
                       <div className="flex items-start space-x-3">
                         <div className="relative">
                           <div className="w-12 h-12 bg-[#F6CB5A] rounded-full flex items-center justify-center">
-                            <span className="text-[#3C2A1E] font-bold">{conversation.avatar}</span>
+                            <span className="text-[#3C2A1E] font-bold">
+                              {conversation.avatar}
+                            </span>
                           </div>
                           {conversation.online && (
                             <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-[#2ECC71] border-2 border-white rounded-full"></div>
@@ -199,9 +219,13 @@ export default function MessagesPage() {
 
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between mb-1">
-                            <h3 className="font-semibold text-[#3C2A1E] truncate">{conversation.name}</h3>
+                            <h3 className="font-semibold text-[#3C2A1E] truncate">
+                              {conversation.name}
+                            </h3>
                             <div className="flex items-center space-x-2">
-                              <span className="text-xs text-[#7F8C8D]">{conversation.timestamp}</span>
+                              <span className="text-xs text-[#7F8C8D]">
+                                {conversation.timestamp}
+                              </span>
                               {conversation.unread > 0 && (
                                 <Badge className="bg-[#F6CB5A] text-[#3C2A1E] text-xs px-2 py-1 rounded-full min-w-[20px] h-5 flex items-center justify-center">
                                   {conversation.unread}
@@ -211,10 +235,13 @@ export default function MessagesPage() {
                           </div>
 
                           <div className="text-sm text-[#7F8C8D] mb-2">
-                            {conversation.roomTitle} • {conversation.roomPrice} Birr/month
+                            {conversation.roomTitle} • {conversation.roomPrice}{" "}
+                            Birr/month
                           </div>
 
-                          <p className="text-sm text-[#3C2A1E] truncate">{conversation.lastMessage}</p>
+                          <p className="text-sm text-[#3C2A1E] truncate">
+                            {conversation.lastMessage}
+                          </p>
                         </div>
                       </div>
                     </button>
@@ -234,16 +261,24 @@ export default function MessagesPage() {
                     <div className="flex items-center space-x-3">
                       <div className="relative">
                         <div className="w-10 h-10 bg-[#F6CB5A] rounded-full flex items-center justify-center">
-                          <span className="text-[#3C2A1E] font-bold">{selectedConversation.avatar}</span>
+                          <span className="text-[#3C2A1E] font-bold">
+                            {selectedConversation.avatar}
+                          </span>
                         </div>
                         {selectedConversation.online && (
                           <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-[#2ECC71] border-2 border-white rounded-full"></div>
                         )}
                       </div>
                       <div>
-                        <h3 className="font-semibold text-[#3C2A1E]">{selectedConversation.name}</h3>
+                        <h3 className="font-semibold text-[#3C2A1E]">
+                          {selectedConversation.name}
+                        </h3>
                         <div className="flex items-center space-x-2 text-sm text-[#7F8C8D]">
-                          <span>{selectedConversation.online ? "Online" : "Last seen 2 hours ago"}</span>
+                          <span>
+                            {selectedConversation.online
+                              ? "Online"
+                              : "Last seen 2 hours ago"}
+                          </span>
                           <span>•</span>
                           <span>{selectedConversation.roomTitle}</span>
                         </div>
@@ -251,13 +286,22 @@ export default function MessagesPage() {
                     </div>
 
                     <div className="flex items-center space-x-2">
-                      <Button variant="ghost" className="text-[#7F8C8D] hover:bg-[#FFFEF7] p-2 rounded-md">
+                      <Button
+                        variant="ghost"
+                        className="text-[#7F8C8D] hover:bg-[#FFFEF7] p-2 rounded-md"
+                      >
                         <Phone className="w-5 h-5" />
                       </Button>
-                      <Button variant="ghost" className="text-[#7F8C8D] hover:bg-[#FFFEF7] p-2 rounded-md">
+                      <Button
+                        variant="ghost"
+                        className="text-[#7F8C8D] hover:bg-[#FFFEF7] p-2 rounded-md"
+                      >
                         <Video className="w-5 h-5" />
                       </Button>
-                      <Button variant="ghost" className="text-[#7F8C8D] hover:bg-[#FFFEF7] p-2 rounded-md">
+                      <Button
+                        variant="ghost"
+                        className="text-[#7F8C8D] hover:bg-[#FFFEF7] p-2 rounded-md"
+                      >
                         <MoreVertical className="w-5 h-5" />
                       </Button>
                     </div>
@@ -269,7 +313,11 @@ export default function MessagesPage() {
                   {mockMessages.map((message) => (
                     <div
                       key={message.id}
-                      className={`flex ${message.sender === "me" ? "justify-end" : "justify-start"}`}
+                      className={`flex ${
+                        message.sender === "me"
+                          ? "justify-end"
+                          : "justify-start"
+                      }`}
                     >
                       <div
                         className={`max-w-xs lg:max-w-md ${
@@ -297,14 +345,20 @@ export default function MessagesPage() {
 
                         <div
                           className={`flex items-center justify-between mt-2 text-xs ${
-                            message.sender === "me" ? "text-[#3C2A1E]/70" : "text-[#7F8C8D]"
+                            message.sender === "me"
+                              ? "text-[#3C2A1E]/70"
+                              : "text-[#7F8C8D]"
                           }`}
                         >
                           <span>{message.timestamp}</span>
                           {message.sender === "me" && (
                             <div className="flex items-center">
-                              {message.status === "delivered" && <CheckCircle className="w-3 h-3" />}
-                              {message.status === "sent" && <Clock className="w-3 h-3" />}
+                              {message.status === "delivered" && (
+                                <CheckCircle className="w-3 h-3" />
+                              )}
+                              {message.status === "sent" && (
+                                <Clock className="w-3 h-3" />
+                              )}
                             </div>
                           )}
                         </div>
@@ -316,7 +370,10 @@ export default function MessagesPage() {
                 {/* Message Input */}
                 <div className="p-4 border-t border-[#ECF0F1] bg-[#FDF8F0]">
                   <div className="flex items-center space-x-2">
-                    <Button variant="ghost" className="text-[#7F8C8D] hover:bg-[#FFFEF7] p-2 rounded-md">
+                    <Button
+                      variant="ghost"
+                      className="text-[#7F8C8D] hover:bg-[#FFFEF7] p-2 rounded-md"
+                    >
                       <Paperclip className="w-5 h-5" />
                     </Button>
 
@@ -325,7 +382,9 @@ export default function MessagesPage() {
                         placeholder="Type your message..."
                         value={newMessage}
                         onChange={(e) => setNewMessage(e.target.value)}
-                        onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
+                        onKeyPress={(e) =>
+                          e.key === "Enter" && handleSendMessage()
+                        }
                         className="bg-[#FFFEF7] border border-[#BDC3C7] focus:border-[#F6CB5A] focus:ring-2 focus:ring-[#F6CB5A]/20 rounded-full px-4 py-2 pr-10 text-[#3C2A1E] placeholder-[#7F8C8D]"
                       />
                       <Button
@@ -377,10 +436,13 @@ export default function MessagesPage() {
                   <CheckCircle className="w-4 h-4 text-white" />
                 </div>
                 <div>
-                  <h4 className="font-semibold text-[#1976D2] mb-1">Safety Reminder</h4>
+                  <h4 className="font-semibold text-[#1976D2] mb-1">
+                    Safety Reminder
+                  </h4>
                   <p className="text-sm text-[#1976D2]">
-                    Always meet in public places first and verify identity before sharing personal information. Never
-                    send money or personal documents through messages.
+                    Always meet in public places first and verify identity
+                    before sharing personal information. Never send money or
+                    personal documents through messages.
                   </p>
                 </div>
               </div>
@@ -389,5 +451,5 @@ export default function MessagesPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }

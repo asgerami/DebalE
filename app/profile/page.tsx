@@ -24,6 +24,7 @@ import {
   Lock,
 } from "lucide-react"
 import Link from "next/link"
+import { useProfile } from '../../hooks/useProfile'
 
 const mockUserProfile = {
   id: "user_123",
@@ -64,6 +65,10 @@ const mockUserProfile = {
 }
 
 export default function ProfilePage() {
+  // Replace this with your actual user ID from auth context/session
+  const userId = 'REPLACE_WITH_AUTH_USER_ID'
+  const { profile, loading, error, saveProfile } = useProfile(userId)
+
   const [isEditing, setIsEditing] = useState(false)
   const [activeTab, setActiveTab] = useState("profile")
   const [showPassword, setShowPassword] = useState(false)

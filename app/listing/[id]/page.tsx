@@ -1,10 +1,10 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Textarea } from "@/components/ui/textarea"
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
 import {
   ArrowLeft,
   MapPin,
@@ -20,9 +20,10 @@ import {
   Phone,
   Mail,
   Camera,
-} from "lucide-react"
-import Link from "next/link"
-import Image from "next/image"
+} from "lucide-react";
+import Link from "next/link";
+import Image from "next/image";
+import { useListings } from "../../../hooks/useListings";
 
 const mockListing = {
   id: 1,
@@ -38,7 +39,14 @@ const mockListing = {
     "/placeholder.svg?height=400&width=600",
     "/placeholder.svg?height=400&width=600",
   ],
-  amenities: ["WiFi", "Kitchen Access", "Parking", "Laundry", "Security", "Study Area"],
+  amenities: [
+    "WiFi",
+    "Kitchen Access",
+    "Parking",
+    "Laundry",
+    "Security",
+    "Study Area",
+  ],
   roommates: 2,
   verified: true,
   featured: true,
@@ -66,15 +74,27 @@ const mockListing = {
     memberSince: "2023",
   },
   currentRoommates: [
-    { name: "Sara", age: 22, occupation: "Engineering Student", interests: ["Reading", "Coffee"] },
-    { name: "Daniel", age: 24, occupation: "Computer Science Student", interests: ["Gaming", "Music"] },
+    {
+      name: "Sara",
+      age: 22,
+      occupation: "Engineering Student",
+      interests: ["Reading", "Coffee"],
+    },
+    {
+      name: "Daniel",
+      age: 24,
+      occupation: "Computer Science Student",
+      interests: ["Gaming", "Music"],
+    },
   ],
-}
+};
 
 export default function ListingDetailPage() {
-  const [currentImageIndex, setCurrentImageIndex] = useState(0)
-  const [message, setMessage] = useState("")
-  const [showContactForm, setShowContactForm] = useState(false)
+  // Example usage of the listings hook
+  const { listings, loading, error, addListing, editListing } = useListings();
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [message, setMessage] = useState("");
+  const [showContactForm, setShowContactForm] = useState(false);
 
   return (
     <div className="min-h-screen bg-[#FFFEF7]">
@@ -84,15 +104,23 @@ export default function ListingDetailPage() {
           <div className="flex items-center space-x-4">
             <Link href="/search" className="flex items-center space-x-2">
               <ArrowLeft className="w-5 h-5 text-[#7F8C8D]" />
-              <span className="text-[#7F8C8D] hover:text-[#3C2A1E]">Back to Search</span>
+              <span className="text-[#7F8C8D] hover:text-[#3C2A1E]">
+                Back to Search
+              </span>
             </Link>
           </div>
 
           <div className="flex items-center space-x-4">
-            <Button variant="ghost" className="text-[#7F8C8D] hover:bg-[#FDF8F0] p-2 rounded-md">
+            <Button
+              variant="ghost"
+              className="text-[#7F8C8D] hover:bg-[#FDF8F0] p-2 rounded-md"
+            >
               <Share2 className="w-5 h-5" />
             </Button>
-            <Button variant="ghost" className="text-[#7F8C8D] hover:text-[#E74C3C] hover:bg-[#FDF8F0] p-2 rounded-md">
+            <Button
+              variant="ghost"
+              className="text-[#7F8C8D] hover:text-[#E74C3C] hover:bg-[#FDF8F0] p-2 rounded-md"
+            >
               <Heart className="w-5 h-5" />
             </Button>
           </div>
@@ -107,14 +135,18 @@ export default function ListingDetailPage() {
             <div className="space-y-4">
               <div className="relative">
                 <Image
-                  src={mockListing.images[currentImageIndex] || "/placeholder.svg"}
+                  src={
+                    mockListing.images[currentImageIndex] || "/placeholder.svg"
+                  }
                   alt={mockListing.title}
                   width={600}
                   height={400}
                   className="w-full h-96 object-cover rounded-xl"
                 />
                 {mockListing.featured && (
-                  <Badge className="absolute top-4 left-4 bg-[#F6CB5A] text-[#3C2A1E] px-3 py-1">Featured</Badge>
+                  <Badge className="absolute top-4 left-4 bg-[#F6CB5A] text-[#3C2A1E] px-3 py-1">
+                    Featured
+                  </Badge>
                 )}
                 {mockListing.verified && (
                   <div className="absolute top-4 right-4 bg-[#2ECC71] text-white px-3 py-1 rounded-md text-sm flex items-center">
@@ -154,7 +186,9 @@ export default function ListingDetailPage() {
               <div>
                 <div className="flex items-start justify-between mb-4">
                   <div>
-                    <h1 className="text-3xl font-bold text-[#3C2A1E] mb-2">{mockListing.title}</h1>
+                    <h1 className="text-3xl font-bold text-[#3C2A1E] mb-2">
+                      {mockListing.title}
+                    </h1>
                     <div className="flex items-center text-[#7F8C8D] mb-2">
                       <MapPin className="w-5 h-5 mr-2" />
                       {mockListing.location}
@@ -175,20 +209,29 @@ export default function ListingDetailPage() {
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="text-3xl font-bold text-[#F6CB5A]">{mockListing.price} Birr</div>
+                    <div className="text-3xl font-bold text-[#F6CB5A]">
+                      {mockListing.price} Birr
+                    </div>
                     <div className="text-sm text-[#7F8C8D]">per month</div>
                   </div>
                 </div>
 
-                <p className="text-[#3C2A1E] leading-relaxed">{mockListing.description}</p>
+                <p className="text-[#3C2A1E] leading-relaxed">
+                  {mockListing.description}
+                </p>
               </div>
 
               {/* Amenities */}
               <div>
-                <h2 className="text-xl font-bold text-[#3C2A1E] mb-4">Amenities</h2>
+                <h2 className="text-xl font-bold text-[#3C2A1E] mb-4">
+                  Amenities
+                </h2>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                   {mockListing.amenities.map((amenity, index) => (
-                    <div key={index} className="flex items-center space-x-2 text-[#3C2A1E]">
+                    <div
+                      key={index}
+                      className="flex items-center space-x-2 text-[#3C2A1E]"
+                    >
                       <CheckCircle className="w-5 h-5 text-[#2ECC71]" />
                       <span>{amenity}</span>
                     </div>
@@ -198,10 +241,15 @@ export default function ListingDetailPage() {
 
               {/* House Rules */}
               <div>
-                <h2 className="text-xl font-bold text-[#3C2A1E] mb-4">House Rules</h2>
+                <h2 className="text-xl font-bold text-[#3C2A1E] mb-4">
+                  House Rules
+                </h2>
                 <div className="space-y-2">
                   {mockListing.houseRules.map((rule, index) => (
-                    <div key={index} className="flex items-center space-x-2 text-[#3C2A1E]">
+                    <div
+                      key={index}
+                      className="flex items-center space-x-2 text-[#3C2A1E]"
+                    >
                       <div className="w-2 h-2 bg-[#F6CB5A] rounded-full"></div>
                       <span>{rule}</span>
                     </div>
@@ -211,20 +259,31 @@ export default function ListingDetailPage() {
 
               {/* Current Roommates */}
               <div>
-                <h2 className="text-xl font-bold text-[#3C2A1E] mb-4">Current Roommates</h2>
+                <h2 className="text-xl font-bold text-[#3C2A1E] mb-4">
+                  Current Roommates
+                </h2>
                 <div className="grid md:grid-cols-2 gap-4">
                   {mockListing.currentRoommates.map((roommate, index) => (
-                    <Card key={index} className="bg-[#FDF8F0] border border-[#ECF0F1] rounded-xl p-4">
+                    <Card
+                      key={index}
+                      className="bg-[#FDF8F0] border border-[#ECF0F1] rounded-xl p-4"
+                    >
                       <div className="flex items-center space-x-3">
                         <div className="w-12 h-12 bg-[#F6CB5A] rounded-full flex items-center justify-center">
-                          <span className="text-[#3C2A1E] font-bold">{roommate.name[0]}</span>
+                          <span className="text-[#3C2A1E] font-bold">
+                            {roommate.name[0]}
+                          </span>
                         </div>
                         <div>
                           <div className="font-semibold text-[#3C2A1E]">
                             {roommate.name}, {roommate.age}
                           </div>
-                          <div className="text-sm text-[#7F8C8D]">{roommate.occupation}</div>
-                          <div className="text-xs text-[#7F8C8D]">Interests: {roommate.interests.join(", ")}</div>
+                          <div className="text-sm text-[#7F8C8D]">
+                            {roommate.occupation}
+                          </div>
+                          <div className="text-xs text-[#7F8C8D]">
+                            Interests: {roommate.interests.join(", ")}
+                          </div>
                         </div>
                       </div>
                     </Card>
@@ -234,12 +293,19 @@ export default function ListingDetailPage() {
 
               {/* Nearby Places */}
               <div>
-                <h2 className="text-xl font-bold text-[#3C2A1E] mb-4">Nearby Places</h2>
+                <h2 className="text-xl font-bold text-[#3C2A1E] mb-4">
+                  Nearby Places
+                </h2>
                 <div className="grid md:grid-cols-2 gap-3">
                   {mockListing.nearbyPlaces.map((place, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 bg-[#FDF8F0] rounded-lg">
+                    <div
+                      key={index}
+                      className="flex items-center justify-between p-3 bg-[#FDF8F0] rounded-lg"
+                    >
                       <span className="text-[#3C2A1E]">{place.name}</span>
-                      <span className="text-sm text-[#7F8C8D]">{place.distance}</span>
+                      <span className="text-sm text-[#7F8C8D]">
+                        {place.distance}
+                      </span>
                     </div>
                   ))}
                 </div>
@@ -256,16 +322,23 @@ export default function ListingDetailPage() {
                 <div className="space-y-4">
                   <div className="flex items-center space-x-3">
                     <div className="w-12 h-12 bg-[#F6CB5A] rounded-full flex items-center justify-center">
-                      <span className="text-[#3C2A1E] font-bold">{mockListing.provider.name[0]}</span>
+                      <span className="text-[#3C2A1E] font-bold">
+                        {mockListing.provider.name[0]}
+                      </span>
                     </div>
                     <div>
-                      <div className="font-semibold text-[#3C2A1E]">{mockListing.provider.name}</div>
+                      <div className="font-semibold text-[#3C2A1E]">
+                        {mockListing.provider.name}
+                      </div>
                       <div className="flex items-center space-x-2">
                         <Star className="w-4 h-4 fill-[#F6CB5A] text-[#F6CB5A]" />
                         <span className="text-sm text-[#7F8C8D]">
-                          {mockListing.provider.rating} ({mockListing.provider.reviews} reviews)
+                          {mockListing.provider.rating} (
+                          {mockListing.provider.reviews} reviews)
                         </span>
-                        {mockListing.provider.verified && <Shield className="w-4 h-4 text-[#2ECC71]" />}
+                        {mockListing.provider.verified && (
+                          <Shield className="w-4 h-4 text-[#2ECC71]" />
+                        )}
                       </div>
                     </div>
                   </div>
@@ -273,7 +346,9 @@ export default function ListingDetailPage() {
                   <div className="space-y-2 text-sm text-[#7F8C8D]">
                     <div>Member since {mockListing.provider.memberSince}</div>
                     <div>{mockListing.provider.responseTime}</div>
-                    <div>Languages: {mockListing.provider.languages.join(", ")}</div>
+                    <div>
+                      Languages: {mockListing.provider.languages.join(", ")}
+                    </div>
                   </div>
                 </div>
 
@@ -318,13 +393,21 @@ export default function ListingDetailPage() {
 
                 {/* Quick Contact */}
                 <div className="pt-4 border-t border-[#ECF0F1]">
-                  <div className="text-sm font-semibold text-[#7F8C8D] mb-2">Quick Contact</div>
+                  <div className="text-sm font-semibold text-[#7F8C8D] mb-2">
+                    Quick Contact
+                  </div>
                   <div className="flex space-x-2">
-                    <Button variant="ghost" className="text-[#7F8C8D] hover:bg-[#FDF8F0] p-2 rounded-md flex-1">
+                    <Button
+                      variant="ghost"
+                      className="text-[#7F8C8D] hover:bg-[#FDF8F0] p-2 rounded-md flex-1"
+                    >
                       <Phone className="w-4 h-4 mr-1" />
                       Call
                     </Button>
-                    <Button variant="ghost" className="text-[#7F8C8D] hover:bg-[#FDF8F0] p-2 rounded-md flex-1">
+                    <Button
+                      variant="ghost"
+                      className="text-[#7F8C8D] hover:bg-[#FDF8F0] p-2 rounded-md flex-1"
+                    >
                       <Mail className="w-4 h-4 mr-1" />
                       Email
                     </Button>
@@ -346,7 +429,10 @@ export default function ListingDetailPage() {
                   <div>• Trust your instincts</div>
                   <div>• Report suspicious behavior</div>
                 </div>
-                <Link href="/safety" className="text-[#F6CB5A] hover:text-[#E6B84A] text-sm font-medium">
+                <Link
+                  href="/safety"
+                  className="text-[#F6CB5A] hover:text-[#E6B84A] text-sm font-medium"
+                >
                   Read full safety guide →
                 </Link>
               </CardContent>
@@ -355,5 +441,5 @@ export default function ListingDetailPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }
