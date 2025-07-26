@@ -16,10 +16,6 @@ A modern web application built with Next.js, React, and TypeScript.
 
    ```bash
    npm install
-   # or
-   pnpm install
-   # or
-   yarn install
    ```
 
 2. Set up environment variables:
@@ -38,10 +34,6 @@ A modern web application built with Next.js, React, and TypeScript.
 
    ```bash
    npm run dev
-   # or
-   pnpm dev
-   # or
-   yarn dev
    ```
 
 4. Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.

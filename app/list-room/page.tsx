@@ -705,11 +705,15 @@ export default function ListRoomPage() {
                       </div>
 
                       <div className="grid grid-cols-3 gap-2">
-                        {[1, 2, 3].map((index) => (
+                        {[
+                          "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80",
+                          "https://images.unsplash.com/photo-1560448075-bb485b067938?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80",
+                          "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
+                        ].map((image, index) => (
                           <Image
                             key={index}
-                            src={`/placeholder.svg?height=100&width=150&query=Ethiopian room photo ${index}`}
-                            alt={`Room preview ${index}`}
+                            src={image}
+                            alt={`Room preview ${index + 1}`}
                             width={150}
                             height={100}
                             className="w-full h-20 object-cover rounded-md"

@@ -177,15 +177,15 @@ export default function LandingPage() {
                     Need a roommate?
                   </h3>
                   <Link href="/list-room">
-                    <Button className="bg-[#20B2AA] hover:bg-[#1A9A94] text-white font-semibold py-4 px-8 rounded-xl shadow-md hover:shadow-lg transition-all duration-200">
+                    <Button className="bg-[#F6CB5A] hover:bg-[#E6B84A] text-[#3C2A1E] font-semibold py-4 px-8 rounded-xl shadow-md hover:shadow-lg transition-all duration-200">
                       List your room
                       <ArrowRight className="ml-2 w-5 h-5" />
                     </Button>
                   </Link>
                 </div>
                 <div className="hidden md:block">
-                  <div className="w-24 h-24 bg-[#20B2AA] rounded-full flex items-center justify-center">
-                    <Users className="w-12 h-12 text-white" />
+                  <div className="w-24 h-24 bg-[#F6CB5A] rounded-full flex items-center justify-center">
+                    <Users className="w-12 h-12 text-[#3C2A1E]" />
                   </div>
                 </div>
               </div>
@@ -199,14 +199,14 @@ export default function LandingPage() {
                     Looking for a place?
                   </h3>
                   <Link href="/register">
-                    <Button className="bg-[#FF7F50] hover:bg-[#E66B47] text-white font-semibold py-4 px-8 rounded-xl shadow-md hover:shadow-lg transition-all duration-200">
+                    <Button className="bg-[#3C2A1E] hover:bg-[#2C1A0E] text-white font-semibold py-4 px-8 rounded-xl shadow-md hover:shadow-lg transition-all duration-200">
                       Create your profile
                       <ArrowRight className="ml-2 w-5 h-5" />
                     </Button>
                   </Link>
                 </div>
                 <div className="hidden md:block">
-                  <div className="w-24 h-24 bg-[#FF7F50] rounded-full flex items-center justify-center">
+                  <div className="w-24 h-24 bg-[#3C2A1E] rounded-full flex items-center justify-center">
                     <Home className="w-12 h-12 text-white" />
                   </div>
                 </div>
