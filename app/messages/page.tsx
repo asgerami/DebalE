@@ -427,28 +427,7 @@ export default function MessagesPage() {
           </div>
         </div>
 
-        {/* Safety Notice */}
-        <div className="mt-6">
-          <Card className="bg-[#E3F2FD] border border-[#2196F3] rounded-xl">
-            <CardContent className="p-4">
-              <div className="flex items-start space-x-3">
-                <div className="w-6 h-6 bg-[#2196F3] rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <CheckCircle className="w-4 h-4 text-white" />
-                </div>
-                <div>
-                  <h4 className="font-semibold text-[#1976D2] mb-1">
-                    Safety Reminder
-                  </h4>
-                  <p className="text-sm text-[#1976D2]">
-                    Always meet in public places first and verify identity
-                    before sharing personal information. Never send money or
-                    personal documents through messages.
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+
       </div>
     </div>
   );

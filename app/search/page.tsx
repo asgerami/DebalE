@@ -1,10 +1,10 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import {
   Search,
   MapPin,
@@ -18,9 +18,9 @@ import {
   Users,
   BedDouble,
   ArrowLeft,
-} from "lucide-react"
-import Link from "next/link"
-import Image from "next/image"
+} from "lucide-react";
+import Link from "next/link";
+import Image from "next/image";
 
 const mockListings = [
   {
@@ -37,6 +37,7 @@ const mockListings = [
     roommates: 2,
     verified: true,
     featured: true,
+    providerId: "provider-1",
   },
   {
     id: 2,
@@ -52,6 +53,7 @@ const mockListings = [
     roommates: 3,
     verified: true,
     featured: false,
+    providerId: "provider-2",
   },
   {
     id: 3,
@@ -67,6 +69,7 @@ const mockListings = [
     roommates: 1,
     verified: true,
     featured: false,
+    providerId: "provider-3",
   },
   {
     id: 4,
@@ -82,6 +85,7 @@ const mockListings = [
     roommates: 2,
     verified: true,
     featured: true,
+    providerId: "provider-4",
   },
   {
     id: 5,
@@ -97,6 +101,7 @@ const mockListings = [
     roommates: 3,
     verified: true,
     featured: false,
+    providerId: "provider-5",
   },
   {
     id: 6,
@@ -113,13 +118,13 @@ const mockListings = [
     verified: true,
     featured: false,
   },
-]
+];
 
 export default function SearchPage() {
-  const [searchQuery, setSearchQuery] = useState("")
-  const [priceRange, setPriceRange] = useState("")
-  const [roomType, setRoomType] = useState("")
-  const [showFilters, setShowFilters] = useState(false)
+  const [searchQuery, setSearchQuery] = useState("");
+  const [priceRange, setPriceRange] = useState("");
+  const [roomType, setRoomType] = useState("");
+  const [showFilters, setShowFilters] = useState(false);
 
   return (
     <div className="min-h-screen bg-[#FFFEF7]">
@@ -137,10 +142,16 @@ export default function SearchPage() {
           </div>
 
           <div className="flex items-center space-x-4">
-            <Link href="/dashboard" className="text-[#7F8C8D] hover:text-[#3C2A1E] font-medium">
+            <Link
+              href="/dashboard"
+              className="text-[#7F8C8D] hover:text-[#3C2A1E] font-medium"
+            >
               Dashboard
             </Link>
-            <Link href="/messages" className="text-[#7F8C8D] hover:text-[#3C2A1E] font-medium">
+            <Link
+              href="/messages"
+              className="text-[#7F8C8D] hover:text-[#3C2A1E] font-medium"
+            >
               Messages
             </Link>
           </div>
@@ -150,8 +161,12 @@ export default function SearchPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Search Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-[#3C2A1E] mb-2">Find Your Perfect Room</h1>
-          <p className="text-[#7F8C8D]">Discover rooms and roommates that match your lifestyle</p>
+          <h1 className="text-3xl font-bold text-[#3C2A1E] mb-2">
+            Find Your Perfect Room
+          </h1>
+          <p className="text-[#7F8C8D]">
+            Discover rooms and roommates that match your lifestyle
+          </p>
         </div>
 
         {/* Search and Filters */}
@@ -182,7 +197,9 @@ export default function SearchPage() {
             <Card className="bg-[#FFFEF7] border border-[#ECF0F1] rounded-xl p-6 shadow-sm">
               <div className="grid md:grid-cols-4 gap-4">
                 <div className="space-y-2">
-                  <label className="font-semibold text-[#7F8C8D] text-sm">Price Range (Birr/month)</label>
+                  <label className="font-semibold text-[#7F8C8D] text-sm">
+                    Price Range (Birr/month)
+                  </label>
                   <Input
                     placeholder="500 - 3000"
                     value={priceRange}
@@ -191,7 +208,9 @@ export default function SearchPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="font-semibold text-[#7F8C8D] text-sm">Room Type</label>
+                  <label className="font-semibold text-[#7F8C8D] text-sm">
+                    Room Type
+                  </label>
                   <Input
                     placeholder="Private, Shared..."
                     value={roomType}
@@ -200,14 +219,18 @@ export default function SearchPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="font-semibold text-[#7F8C8D] text-sm">Gender Preference</label>
+                  <label className="font-semibold text-[#7F8C8D] text-sm">
+                    Gender Preference
+                  </label>
                   <Input
                     placeholder="Any, Male, Female"
                     className="bg-[#FFFEF7] border border-[#BDC3C7] focus:border-[#F6CB5A] focus:ring-2 focus:ring-[#F6CB5A]/20 rounded-md px-4 py-3 text-[#3C2A1E] placeholder-[#7F8C8D]"
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="font-semibold text-[#7F8C8D] text-sm">Amenities</label>
+                  <label className="font-semibold text-[#7F8C8D] text-sm">
+                    Amenities
+                  </label>
                   <Input
                     placeholder="WiFi, Parking..."
                     className="bg-[#FFFEF7] border border-[#BDC3C7] focus:border-[#F6CB5A] focus:ring-2 focus:ring-[#F6CB5A]/20 rounded-md px-4 py-3 text-[#3C2A1E] placeholder-[#7F8C8D]"
@@ -221,8 +244,12 @@ export default function SearchPage() {
         {/* Results Header */}
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h2 className="text-xl font-bold text-[#3C2A1E]">Available Rooms</h2>
-            <p className="text-[#7F8C8D]">{mockListings.length} rooms found in Addis Ababa</p>
+            <h2 className="text-xl font-bold text-[#3C2A1E]">
+              Available Rooms
+            </h2>
+            <p className="text-[#7F8C8D]">
+              {mockListings.length} rooms found in Addis Ababa
+            </p>
           </div>
           <div className="flex items-center space-x-2">
             <span className="text-sm text-[#7F8C8D]">Sort by:</span>
@@ -255,7 +282,9 @@ export default function SearchPage() {
                   className="w-full h-48 object-cover"
                 />
                 {listing.featured && (
-                  <Badge className="absolute top-3 left-3 bg-[#F6CB5A] text-[#3C2A1E] px-2 py-1">Featured</Badge>
+                  <Badge className="absolute top-3 left-3 bg-[#F6CB5A] text-[#3C2A1E] px-2 py-1">
+                    Featured
+                  </Badge>
                 )}
                 <Button
                   variant="ghost"
@@ -275,9 +304,13 @@ export default function SearchPage() {
               <CardContent className="p-6 space-y-4">
                 <div className="space-y-2">
                   <div className="flex items-start justify-between">
-                    <h3 className="text-lg font-bold text-[#3C2A1E] line-clamp-1">{listing.title}</h3>
+                    <h3 className="text-lg font-bold text-[#3C2A1E] line-clamp-1">
+                      {listing.title}
+                    </h3>
                     <div className="text-right">
-                      <div className="text-xl font-bold text-[#F6CB5A]">{listing.price} Birr</div>
+                      <div className="text-xl font-bold text-[#F6CB5A]">
+                        {listing.price} Birr
+                      </div>
                       <div className="text-xs text-[#7F8C8D]">per month</div>
                     </div>
                   </div>
@@ -300,16 +333,25 @@ export default function SearchPage() {
 
                   <div className="flex items-center space-x-1">
                     <Star className="w-4 h-4 fill-[#F6CB5A] text-[#F6CB5A]" />
-                    <span className="text-sm font-medium text-[#3C2A1E]">{listing.rating}</span>
-                    <span className="text-sm text-[#7F8C8D]">({listing.reviews} reviews)</span>
+                    <span className="text-sm font-medium text-[#3C2A1E]">
+                      {listing.rating}
+                    </span>
+                    <span className="text-sm text-[#7F8C8D]">
+                      ({listing.reviews} reviews)
+                    </span>
                   </div>
                 </div>
 
                 <div className="flex flex-wrap gap-2">
                   {listing.amenities.slice(0, 3).map((amenity, index) => (
-                    <Badge key={index} className="bg-[#FDF8F0] text-[#7F8C8D] border-[#ECF0F1] px-2 py-1 text-xs">
+                    <Badge
+                      key={index}
+                      className="bg-[#FDF8F0] text-[#7F8C8D] border-[#ECF0F1] px-2 py-1 text-xs"
+                    >
                       {amenity === "WiFi" && <Wifi className="w-3 h-3 mr-1" />}
-                      {amenity === "Parking" && <Car className="w-3 h-3 mr-1" />}
+                      {amenity === "Parking" && (
+                        <Car className="w-3 h-3 mr-1" />
+                      )}
                       {amenity}
                     </Badge>
                   ))}
@@ -326,9 +368,15 @@ export default function SearchPage() {
                       View Details
                     </Button>
                   </Link>
-                  <Button className="border-2 border-[#F6CB5A] text-[#F6CB5A] hover:bg-[#F6CB5A] hover:text-[#3C2A1E] py-2 px-4 rounded-lg transition-all duration-200">
-                    Contact
-                  </Button>
+                  <Link
+                    href={`/messages?listing=${listing.id}&provider=${
+                      listing.providerId || "provider-1"
+                    }`}
+                  >
+                    <Button className="border-2 border-[#F6CB5A] text-[#F6CB5A] hover:bg-[#F6CB5A] hover:text-[#3C2A1E] py-2 px-4 rounded-lg transition-all duration-200">
+                      Contact
+                    </Button>
+                  </Link>
                 </div>
               </CardContent>
             </Card>
@@ -343,5 +391,5 @@ export default function SearchPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }

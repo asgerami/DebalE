@@ -109,126 +109,13 @@ export default function ListRoomPage() {
   };
 
   const handleSubmit = async () => {
-    console.log("Submit clicked, user:", user); // Debug log
-    console.log("User ID:", user?.id); // Debug log
-    console.log("Loading state:", loading); // Debug log
-
-    if (!user) {
-      setSubmitError("You must be logged in to create a listing");
-      return;
-    }
-
-    if (!user.id) {
-      setSubmitError("User ID is missing. Please try logging in again.");
-      return;
-    }
-
-    // Capture user ID at the beginning to avoid race conditions
-    const userId = user.id;
-    console.log("Captured user ID:", userId); // Debug log
-
     setIsSubmitting(true);
     setSubmitError("");
-
-    try {
-      console.log("About to check profile for user ID:", userId); // Debug log
-
-      // Check if user has a profile, create one if not
-      let userProfile;
-      try {
-        userProfile = await getProfile(userId);
-        console.log("Profile found:", userProfile); // Debug log
-      } catch (error) {
-        console.log(
-          "Profile not found, creating new profile for user ID:",
-          userId
-        ); // Debug log
-        // Profile doesn't exist, create one
-        userProfile = await createProfile({
-          id: userId,
-          user_type: "provider",
-          full_name:
-            user.user_metadata?.full_name ||
-            user.email?.split("@")[0] ||
-            "User",
-          age: null,
-          gender: null,
-          phone: null,
-          phone_verified: false,
-          avatar_url: null,
-          occupation: null,
-          languages: [],
-          current_location: null,
-          bio: null,
-        });
-        console.log("New profile created:", userProfile); // Debug log
-      }
-
-      // Double-check user is still valid before creating listing
-      if (!user || !user.id) {
-        throw new Error("User session expired. Please log in again.");
-      }
-
-      const listingData = {
-        provider_id: userId,
-        title: formData.title,
-        description: formData.description,
-        area: formData.location,
-        monthly_rent: parseInt(formData.price) || 0,
-        room_type: formData.roomType,
-        house_rules: formData.houseRules,
-        available_from: formData.availability,
-        preferred_tenant_gender:
-          (formData.genderPreference as "male" | "female" | "any") || "any",
-        preferred_tenant_age_min: formData.ageRange
-          ? parseInt(formData.ageRange.split("-")[0])
-          : 18,
-        preferred_tenant_age_max: formData.ageRange
-          ? parseInt(formData.ageRange.split("-")[1])
-          : 99,
-        preferred_tenant_occupation: formData.occupation
-          ? [formData.occupation]
-          : [],
-        is_active: true,
-        // Set default values for required fields
-        utilities_included: false,
-        furnished: false,
-        private_bathroom: false,
-        wifi: selectedAmenities.includes("wifi"),
-        kitchen_access: selectedAmenities.includes("kitchen"),
-        laundry: selectedAmenities.includes("laundry"),
-        parking: selectedAmenities.includes("parking"),
-        security: selectedAmenities.includes("security"),
-        current_roommates: 0,
-        max_roommates: 4,
-        featured: false,
-      };
-
-      console.log("Creating listing with data:", listingData); // Debug log
-      const newListing = await createListing(listingData);
-      console.log("Listing created successfully:", newListing);
-
-      // Upload photos if any were selected
-      if (uploadedPhotos.length > 0) {
-        try {
-          for (let i = 0; i < uploadedPhotos.length; i++) {
-            await uploadListing(uploadedPhotos[i], newListing.id);
-          }
-          console.log("Photos uploaded successfully");
-        } catch (photoError) {
-          console.error("Error uploading photos:", photoError);
-          // Continue with redirect even if photo upload fails
-        }
-      }
-
-      // Redirect to the listing page or show success message
-      router.push(`/listing/${newListing.id}`);
-    } catch (err: any) {
-      console.error("Error creating listing:", err);
-      setSubmitError(err.message || "Failed to create listing");
-    } finally {
+    // Simulate loading for demo
+    setTimeout(() => {
       setIsSubmitting(false);
-    }
+      router.push("/listing/1");
+    }, 1000);
   };
 
   // Show loading state while auth is being checked
@@ -284,9 +171,9 @@ export default function ListRoomPage() {
             </div>
           </div>
 
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center justify-between">
             {[1, 2, 3, 4].map((step) => (
-              <div key={step} className="flex items-center">
+              <div key={step} className="flex flex-col items-center">
                 <div
                   className={`w-8 h-8 rounded-full flex items-center justify-center ${
                     step <= currentStep
@@ -300,22 +187,21 @@ export default function ListRoomPage() {
                     step
                   )}
                 </div>
+                <span className="text-xs text-[#7F8C8D] mt-1">
+                  {step === 1 && "Basic Info"}
+                  {step === 2 && "Details"}
+                  {step === 3 && "Photos"}
+                  {step === 4 && "Review"}
+                </span>
                 {step < 4 && (
                   <div
-                    className={`w-16 h-1 mx-2 ${
+                    className={`w-16 h-1 mt-2 ${
                       step < currentStep ? "bg-[#F6CB5A]" : "bg-[#ECF0F1]"
                     }`}
                   ></div>
                 )}
               </div>
             ))}
-          </div>
-
-          <div className="flex justify-between mt-2 text-xs text-[#7F8C8D]">
-            <span>Basic Info</span>
-            <span>Details</span>
-            <span>Photos</span>
-            <span>Review</span>
           </div>
         </div>
 
