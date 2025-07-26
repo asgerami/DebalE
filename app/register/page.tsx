@@ -7,10 +7,15 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Coffee, User, Home, ArrowRight, CheckCircle, Shield } from "lucide-react"
 import Link from "next/link"
+import { useAuth } from "@/lib/auth-context"
+import { useRouter } from "next/navigation"
+import { AuthGuard } from "@/components/auth-guard"
 
 export default function RegisterPage() {
   const [userType, setUserType] = useState("")
   const [currentStep, setCurrentStep] = useState(1)
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const [formData, setFormData] = useState({
     // Basic Info
     fullName: "",
@@ -41,7 +46,13 @@ export default function RegisterPage() {
     idType: "",
     studentId: "",
     employmentLetter: false,
+    // Authentication
+    password: "",
+    confirmPassword: "",
   })
+  
+  const { signUp } = useAuth()
+  const router = useRouter()
 
   const handleNext = () => {
     if (currentStep < 4) {
@@ -55,13 +66,47 @@ export default function RegisterPage() {
     }
   }
 
-  const handleSubmit = () => {
-    console.log("Registration submitted:", formData)
-    // Handle registration
+  const handleSubmit = async () => {
+    setIsLoading(true)
+    setError(null)
+
+    // Validate passwords match
+    if (formData.password !== formData.confirmPassword) {
+      setError("Passwords don't match")
+      setIsLoading(false)
+      return
+    }
+
+    // Validate password length
+    if (formData.password.length < 6) {
+      setError("Password must be at least 6 characters long")
+      setIsLoading(false)
+      return
+    }
+
+    try {
+      // Sign up with Supabase Auth
+      const { error: authError } = await signUp(formData.email, formData.password)
+      
+      if (authError) {
+        setError(authError.message)
+        setIsLoading(false)
+        return
+      }
+
+      // The user profile will be automatically created by the database trigger
+      // We can redirect to onboarding to complete the profile
+      router.push('/onboarding')
+    } catch (err) {
+      setError('An unexpected error occurred. Please try again.')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
-    <div className="min-h-screen bg-[#FFFEF7]">
+    <AuthGuard requireAuth={false}>
+      <div className="min-h-screen bg-[#FFFEF7]">
       {/* Header */}
       <header className="bg-[#FFFEF7] shadow-sm border-b border-[#ECF0F1] px-6 py-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
@@ -604,5 +649,6 @@ export default function RegisterPage() {
         )}
       </div>
     </div>
+    </AuthGuard>
   )
 }

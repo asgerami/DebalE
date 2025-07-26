@@ -17,9 +17,12 @@ import {
   Search,
   TrendingUp,
   CheckCircle,
+  LogOut,
 } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
+import { useAuth } from "@/lib/auth-context"
+import { AuthGuard } from "@/components/auth-guard"
 
 const mockUserData = {
   name: "Sara Mengistu",
@@ -86,8 +89,14 @@ const mockRecommendations = [
 
 export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState("overview")
+  const { user, signOut } = useAuth()
+
+  const handleSignOut = async () => {
+    await signOut()
+  }
 
   return (
+    <AuthGuard>
     <div className="min-h-screen bg-[#FFFEF7]">
       {/* Header */}
       <header className="bg-[#FFFEF7] shadow-sm border-b border-[#ECF0F1] px-6 py-4">
@@ -117,8 +126,17 @@ export default function DashboardPage() {
             <Button variant="ghost" className="text-[#7F8C8D] hover:bg-[#FDF8F0] p-2 rounded-md">
               <Bell className="w-5 h-5" />
             </Button>
-            <div className="w-8 h-8 bg-[#F6CB5A] rounded-full flex items-center justify-center">
-              <span className="text-[#3C2A1E] font-bold text-sm">{mockUserData.name[0]}</span>
+            <div className="flex items-center space-x-2">
+              <div className="w-8 h-8 bg-[#F6CB5A] rounded-full flex items-center justify-center">
+                <span className="text-[#3C2A1E] font-bold text-sm">{user?.email?.[0]?.toUpperCase() || 'U'}</span>
+              </div>
+              <Button 
+                variant="ghost" 
+                onClick={handleSignOut}
+                className="text-[#7F8C8D] hover:bg-[#FDF8F0] p-2 rounded-md"
+              >
+                <LogOut className="w-5 h-5" />
+              </Button>
             </div>
           </nav>
         </div>
@@ -403,5 +421,6 @@ export default function DashboardPage() {
         </div>
       </div>
     </div>
+    </AuthGuard>
   )
 }

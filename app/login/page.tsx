@@ -9,30 +9,47 @@ import { Input } from "@/components/ui/input"
 import { Coffee, Eye, EyeOff, Mail, Lock, ArrowRight, Shield, CheckCircle, Phone } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
+import { useAuth } from "@/lib/auth-context"
+import { useRouter } from "next/navigation"
+import { AuthGuard } from "@/components/auth-guard"
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const [formData, setFormData] = useState({
     email: "",
     password: "",
     rememberMe: false,
   })
+  
+  const { signIn } = useAuth()
+  const router = useRouter()
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
+    setError(null)
 
-    // Simulate login process
-    setTimeout(() => {
+    try {
+      const { error } = await signIn(formData.email, formData.password)
+      
+      if (error) {
+        setError(error.message)
+      } else {
+        // Redirect to dashboard on successful login
+        router.push('/dashboard')
+      }
+    } catch (err) {
+      setError('An unexpected error occurred. Please try again.')
+    } finally {
       setIsLoading(false)
-      console.log("Login attempt:", formData)
-      // Handle Supabase authentication here
-    }, 2000)
+    }
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#FFFEF7] to-[#FDF8F0] flex items-center justify-center p-4">
+    <AuthGuard requireAuth={false}>
+      <div className="min-h-screen bg-gradient-to-br from-[#FFFEF7] to-[#FDF8F0] flex items-center justify-center p-4">
       <div className="w-full max-w-6xl grid lg:grid-cols-2 gap-8 items-center">
         {/* Left Side - Branding */}
         <div className="hidden lg:block space-y-8">
@@ -105,6 +122,11 @@ export default function LoginPage() {
               </div>
 
               <form onSubmit={handleLogin} className="space-y-4">
+                {error && (
+                  <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+                    {error}
+                  </div>
+                )}
                 <div className="space-y-2">
                   <label className="font-semibold text-[#7F8C8D] text-sm">Email</label>
                   <div className="relative">
@@ -229,5 +251,6 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+    </AuthGuard>
   )
 }

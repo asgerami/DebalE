@@ -1,86 +1,25 @@
-import { createClient } from "@supabase/supabase-js";
+import { createClient } from '@supabase/supabase-js'
+import type { Database } from '../supabase/integrations/supabase/types'
 
-const supabaseUrl = "https://wmqjffwlotnacrqokale.supabase.co";
-const supabaseAnonKey =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndtcWpmZndsb3RuYWNycW9rYWxlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM1MjA5NDIsImV4cCI6MjA2OTA5Njk0Mn0.qBwabvFQqFDXOmiTnNuYD7xTDMQzmvm-BZHTaBC2QGU";
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://tcouzepukfkoonjtgvdp.supabase.co"
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRjb3V6ZXB1a2Zrb29uanRndmRwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM1MjA1NTgsImV4cCI6MjA2OTA5NjU1OH0.YE_SK7nT9WqRh5NDxdihx6Iq0oaYVy5D2vHY6KfjmME"
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: true
+  }
+})
 
-// --- TypeScript types for main tables ---
-export type Profile = {
-  id: string;
-  user_type: "seeker" | "provider";
-  full_name: string;
-  age: number | null;
-  gender: "male" | "female" | "any" | null;
-  phone: string | null;
-  phone_verified: boolean;
-  avatar_url: string | null;
-  occupation: string | null;
-  languages: string[];
-  current_location: string | null;
-  bio: string | null;
-  created_at: string;
-  updated_at: string;
-  last_active: string;
-};
+// Helper function to get user session
+export const getSession = async () => {
+  const { data: { session }, error } = await supabase.auth.getSession()
+  return { session, error }
+}
 
-export type Listing = {
-  id: string;
-  provider_id: string;
-  title: string;
-  description: string | null;
-  monthly_rent: number;
-  deposit_amount: number | null;
-  utilities_included: boolean;
-  area: string;
-  neighborhood: string | null;
-  address: string | null;
-  latitude: number | null;
-  longitude: number | null;
-  room_type: string;
-  room_size: string | null;
-  furnished: boolean;
-  private_bathroom: boolean;
-  wifi: boolean;
-  kitchen_access: boolean;
-  laundry: boolean;
-  parking: boolean;
-  security: boolean;
-  house_rules: string | null;
-  available_from: string | null;
-  lease_duration: number | null;
-  current_roommates: number;
-  max_roommates: number;
-  preferred_tenant_age_min: number;
-  preferred_tenant_age_max: number;
-  preferred_tenant_gender: "male" | "female" | "any";
-  preferred_tenant_occupation: string[];
-  is_active: boolean;
-  featured: boolean;
-  created_at: string;
-  updated_at: string;
-  expires_at: string | null;
-};
-
-export type Message = {
-  id: string;
-  match_id: string;
-  sender_id: string;
-  content: string;
-  message_type: string;
-  read_at: string | null;
-  created_at: string;
-};
-
-export type Match = {
-  id: string;
-  seeker_id: string;
-  provider_id: string;
-  listing_id: string;
-  compatibility_score: number;
-  seeker_interested: boolean | null;
-  provider_interested: boolean | null;
-  mutual_match: boolean;
-  created_at: string;
-};
+// Helper function to get current user
+export const getCurrentUser = async () => {
+  const { data: { user }, error } = await supabase.auth.getUser()
+  return { user, error }
+} 

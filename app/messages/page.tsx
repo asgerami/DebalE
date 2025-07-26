@@ -1,393 +1,374 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
-import {
-  ArrowLeft,
-  Coffee,
-  Search,
-  Send,
-  Phone,
-  Video,
+import { 
+  Coffee, 
+  MessageCircle, 
+  Send, 
+  Search, 
   MoreVertical,
-  Paperclip,
-  Smile,
-  MapPin,
-  Calendar,
-  CheckCircle,
-  Clock,
+  ArrowLeft,
+  Star,
+  Clock
 } from "lucide-react"
 import Link from "next/link"
-import Image from "next/image"
+import { useAuth } from "@/lib/auth-context"
+import { AuthGuard } from "@/components/auth-guard"
+import { messagesService } from "@/lib/database"
 
-const mockConversations = [
-  {
-    id: 1,
-    name: "Meron Tadesse",
-    lastMessage: "The room is still available. When would you like to visit?",
-    timestamp: "2 min ago",
-    unread: 2,
-    avatar: "M",
-    online: true,
-    roomTitle: "Cozy Room Near AAU Campus",
-    roomPrice: 1500,
-  },
-  {
-    id: 2,
-    name: "Daniel Kebede",
-    lastMessage: "Thanks for your interest! Let me know if you have any questions.",
-    timestamp: "1 hour ago",
-    unread: 0,
-    avatar: "D",
-    online: false,
-    roomTitle: "Modern Shared Apartment",
-    roomPrice: 2200,
-  },
-  {
-    id: 3,
-    name: "Sara Mengistu",
-    lastMessage: "I'm looking for a female roommate. Are you still interested?",
-    timestamp: "3 hours ago",
-    unread: 1,
-    avatar: "S",
-    online: true,
-    roomTitle: "Female-Only Housing",
-    roomPrice: 1800,
-  },
-  {
-    id: 4,
-    name: "Yohannes Alemu",
-    lastMessage: "The deposit is 2 months rent in advance.",
-    timestamp: "1 day ago",
-    unread: 0,
-    avatar: "Y",
-    online: false,
-    roomTitle: "Professional's Choice",
-    roomPrice: 2800,
-  },
-]
-
-const mockMessages = [
-  {
-    id: 1,
-    sender: "other",
-    message: "Hi! I saw your inquiry about the room. It's still available.",
-    timestamp: "10:30 AM",
-    status: "delivered",
-  },
-  {
-    id: 2,
-    sender: "me",
-    message: "Great! Can you tell me more about the neighborhood and the current roommates?",
-    timestamp: "10:32 AM",
-    status: "delivered",
-  },
-  {
-    id: 3,
-    sender: "other",
-    message:
-      "The area is very safe and close to AAU. My current roommates are both engineering students, very quiet and clean.",
-    timestamp: "10:35 AM",
-    status: "delivered",
-  },
-  {
-    id: 4,
-    sender: "other",
-    message: "Here are some photos of the common areas",
-    timestamp: "10:36 AM",
-    status: "delivered",
-    images: ["/placeholder.svg?height=200&width=300", "/placeholder.svg?height=200&width=300"],
-  },
-  {
-    id: 5,
-    sender: "me",
-    message: "The place looks great! When would be a good time to visit?",
-    timestamp: "10:40 AM",
-    status: "delivered",
-  },
-  {
-    id: 6,
-    sender: "other",
-    message: "The room is still available. When would you like to visit?",
-    timestamp: "Just now",
-    status: "delivered",
-  },
-]
+interface Conversation {
+  id: string
+  sender_id: string
+  receiver_id: string
+  content: string
+  is_read: boolean | null
+  created_at: string | null
+  user_profiles_sender_id_fkey?: {
+    full_name: string
+  }
+  user_profiles_receiver_id_fkey?: {
+    full_name: string
+  }
+}
 
 export default function MessagesPage() {
-  const [selectedConversation, setSelectedConversation] = useState(mockConversations[0])
+  const [conversations, setConversations] = useState<Conversation[]>([])
+  const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null)
+  const [messages, setMessages] = useState<Conversation[]>([])
   const [newMessage, setNewMessage] = useState("")
+  const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
+  const [isSending, setIsSending] = useState(false)
 
-  const handleSendMessage = () => {
-    if (newMessage.trim()) {
-      // Handle sending message
-      console.log("Sending message:", newMessage)
-      setNewMessage("")
+  const { user } = useAuth()
+
+  // Load conversations
+  useEffect(() => {
+    const loadConversations = async () => {
+      if (!user) return
+
+      setIsLoading(true)
+      try {
+        const conversationsData = await messagesService.getConversations()
+        setConversations(conversationsData)
+      } catch (error) {
+        console.error('Error loading conversations:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    loadConversations()
+  }, [user])
+
+  // Group conversations by other user
+  const groupedConversations = conversations.reduce((acc, message) => {
+    const otherUserId = message.sender_id === user?.id ? message.receiver_id : message.sender_id
+    const otherUserName = message.sender_id === user?.id 
+      ? message.user_profiles_receiver_id_fkey?.full_name 
+      : message.user_profiles_sender_id_fkey?.full_name
+
+    if (!acc[otherUserId]) {
+      acc[otherUserId] = {
+        userId: otherUserId,
+        userName: otherUserName || 'Unknown User',
+        lastMessage: message,
+        unreadCount: 0
+      }
+    }
+
+    if (!message.is_read && message.sender_id !== user?.id) {
+      acc[otherUserId].unreadCount++
+    }
+
+    // Keep the most recent message
+    if (new Date(message.created_at) > new Date(acc[otherUserId].lastMessage.created_at)) {
+      acc[otherUserId].lastMessage = message
+    }
+
+    return acc
+  }, {} as Record<string, any>)
+
+  const conversationList = Object.values(groupedConversations)
+
+  // Filter conversations by search query
+  const filteredConversations = conversationList.filter(conv =>
+    conv.userName.toLowerCase().includes(searchQuery.toLowerCase())
+  )
+
+  const handleSendMessage = async () => {
+    if (!newMessage.trim() || !selectedConversation || !user) return
+
+    setIsSending(true)
+    try {
+      const messageData = {
+        sender_id: user.id,
+        receiver_id: selectedConversation.sender_id === user.id 
+          ? selectedConversation.receiver_id 
+          : selectedConversation.sender_id,
+        content: newMessage.trim(),
+        room_id: null
+      }
+
+      const sentMessage = await messagesService.sendMessage(messageData)
+      
+      if (sentMessage) {
+        setNewMessage("")
+        // Refresh conversations
+        const updatedConversations = await messagesService.getConversations()
+        setConversations(updatedConversations)
+      }
+    } catch (error) {
+      console.error('Error sending message:', error)
+    } finally {
+      setIsSending(false)
     }
   }
 
-  const filteredConversations = mockConversations.filter(
-    (conv) =>
-      conv.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      conv.roomTitle.toLowerCase().includes(searchQuery.toLowerCase()),
-  )
+  const formatTime = (dateString: string) => {
+    const date = new Date(dateString)
+    const now = new Date()
+    const diffInHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60)
+
+    if (diffInHours < 1) {
+      return 'Just now'
+    } else if (diffInHours < 24) {
+      return `${Math.floor(diffInHours)}h ago`
+    } else {
+      return date.toLocaleDateString()
+    }
+  }
+
+  const getOtherUserName = (conversation: Conversation) => {
+    return conversation.sender_id === user?.id 
+      ? conversation.user_profiles_receiver_id_fkey?.full_name 
+      : conversation.user_profiles_sender_id_fkey?.full_name
+  }
 
   return (
-    <div className="min-h-screen bg-[#FFFEF7]">
-      {/* Header */}
-      <header className="bg-[#FFFEF7] shadow-sm border-b border-[#ECF0F1] px-6 py-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <Link href="/dashboard" className="flex items-center space-x-2">
-              <ArrowLeft className="w-5 h-5 text-[#7F8C8D]" />
-              <span className="text-[#7F8C8D] hover:text-[#3C2A1E]">Back to Dashboard</span>
+    <AuthGuard>
+      <div className="min-h-screen bg-[#FFFEF7]">
+        {/* Header */}
+        <header className="bg-[#FFFEF7] shadow-sm border-b border-[#ECF0F1] px-6 py-4">
+          <div className="max-w-7xl mx-auto flex items-center justify-between">
+            <Link href="/" className="flex items-center space-x-2">
+              <div className="w-8 h-8 bg-gradient-to-br from-[#F6CB5A] to-[#E6B84A] rounded-lg flex items-center justify-center">
+                <Coffee className="w-5 h-5 text-[#3C2A1E]" />
+              </div>
+              <span className="text-xl font-bold text-[#3C2A1E]">DebalE</span>
             </Link>
-          </div>
 
-          <Link href="/" className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-[#F6CB5A] to-[#E6B84A] rounded-lg flex items-center justify-center">
-              <Coffee className="w-5 h-5 text-[#3C2A1E]" />
+            <div className="flex items-center space-x-4">
+              <Link href="/dashboard">
+                <Button variant="ghost" className="text-[#7F8C8D] hover:text-[#3C2A1E]">
+                  Dashboard
+                </Button>
+              </Link>
+              <Link href="/search">
+                <Button variant="ghost" className="text-[#7F8C8D] hover:text-[#3C2A1E]">
+                  Search Rooms
+                </Button>
+              </Link>
             </div>
-            <span className="text-xl font-bold text-[#3C2A1E]">DebalE</span>
-          </Link>
-        </div>
-      </header>
+          </div>
+        </header>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid lg:grid-cols-3 gap-6 h-[calc(100vh-200px)]">
-          {/* Conversations List */}
-          <div className="lg:col-span-1">
-            <Card className="bg-[#FFFEF7] border border-[#ECF0F1] rounded-xl shadow-sm h-full">
-              <CardContent className="p-0 h-full flex flex-col">
-                {/* Search Header */}
-                <div className="p-4 border-b border-[#ECF0F1]">
-                  <h2 className="text-xl font-bold text-[#3C2A1E] mb-4">Messages</h2>
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="grid lg:grid-cols-3 gap-6 h-[calc(100vh-200px)]">
+            {/* Conversations List */}
+            <div className="lg:col-span-1">
+              <Card className="bg-[#FFFEF7] border border-[#ECF0F1] rounded-xl shadow-sm h-full">
+                <CardHeader className="border-b border-[#ECF0F1]">
+                  <CardTitle className="text-lg font-bold text-[#3C2A1E] flex items-center">
+                    <MessageCircle className="w-5 h-5 mr-2" />
+                    Messages
+                  </CardTitle>
+                  
+                  {/* Search */}
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#7F8C8D]" />
                     <Input
                       placeholder="Search conversations..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-10 bg-[#FDF8F0] border border-[#ECF0F1] focus:border-[#F6CB5A] focus:ring-2 focus:ring-[#F6CB5A]/20 rounded-md text-[#3C2A1E] placeholder-[#7F8C8D]"
+                      className="pl-10 bg-[#FFFEF7] border border-[#BDC3C7] focus:border-[#F6CB5A] focus:ring-2 focus:ring-[#F6CB5A]/20 rounded-md px-3 py-2 text-sm"
                     />
                   </div>
-                </div>
+                </CardHeader>
 
-                {/* Conversations */}
-                <div className="flex-1 overflow-y-auto">
-                  {filteredConversations.map((conversation) => (
-                    <button
-                      key={conversation.id}
-                      onClick={() => setSelectedConversation(conversation)}
-                      className={`w-full p-4 border-b border-[#ECF0F1] hover:bg-[#FDF8F0] transition-colors text-left ${
-                        selectedConversation.id === conversation.id ? "bg-[#FDF8F0] border-r-2 border-r-[#F6CB5A]" : ""
-                      }`}
-                    >
-                      <div className="flex items-start space-x-3">
-                        <div className="relative">
-                          <div className="w-12 h-12 bg-[#F6CB5A] rounded-full flex items-center justify-center">
-                            <span className="text-[#3C2A1E] font-bold">{conversation.avatar}</span>
-                          </div>
-                          {conversation.online && (
-                            <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-[#2ECC71] border-2 border-white rounded-full"></div>
-                          )}
-                        </div>
-
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between mb-1">
-                            <h3 className="font-semibold text-[#3C2A1E] truncate">{conversation.name}</h3>
-                            <div className="flex items-center space-x-2">
-                              <span className="text-xs text-[#7F8C8D]">{conversation.timestamp}</span>
-                              {conversation.unread > 0 && (
-                                <Badge className="bg-[#F6CB5A] text-[#3C2A1E] text-xs px-2 py-1 rounded-full min-w-[20px] h-5 flex items-center justify-center">
-                                  {conversation.unread}
-                                </Badge>
-                              )}
-                            </div>
-                          </div>
-
-                          <div className="text-sm text-[#7F8C8D] mb-2">
-                            {conversation.roomTitle} • {conversation.roomPrice} Birr/month
-                          </div>
-
-                          <p className="text-sm text-[#3C2A1E] truncate">{conversation.lastMessage}</p>
-                        </div>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Chat Area */}
-          <div className="lg:col-span-2">
-            <Card className="bg-[#FFFEF7] border border-[#ECF0F1] rounded-xl shadow-sm h-full">
-              <CardContent className="p-0 h-full flex flex-col">
-                {/* Chat Header */}
-                <div className="p-4 border-b border-[#ECF0F1] bg-[#FDF8F0]">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <div className="relative">
-                        <div className="w-10 h-10 bg-[#F6CB5A] rounded-full flex items-center justify-center">
-                          <span className="text-[#3C2A1E] font-bold">{selectedConversation.avatar}</span>
-                        </div>
-                        {selectedConversation.online && (
-                          <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-[#2ECC71] border-2 border-white rounded-full"></div>
-                        )}
-                      </div>
-                      <div>
-                        <h3 className="font-semibold text-[#3C2A1E]">{selectedConversation.name}</h3>
-                        <div className="flex items-center space-x-2 text-sm text-[#7F8C8D]">
-                          <span>{selectedConversation.online ? "Online" : "Last seen 2 hours ago"}</span>
-                          <span>•</span>
-                          <span>{selectedConversation.roomTitle}</span>
-                        </div>
-                      </div>
+                <CardContent className="p-0">
+                  {isLoading ? (
+                    <div className="flex items-center justify-center py-8">
+                      <div className="w-6 h-6 border-2 border-[#F6CB5A] border-t-transparent rounded-full animate-spin"></div>
                     </div>
-
-                    <div className="flex items-center space-x-2">
-                      <Button variant="ghost" className="text-[#7F8C8D] hover:bg-[#FFFEF7] p-2 rounded-md">
-                        <Phone className="w-5 h-5" />
-                      </Button>
-                      <Button variant="ghost" className="text-[#7F8C8D] hover:bg-[#FFFEF7] p-2 rounded-md">
-                        <Video className="w-5 h-5" />
-                      </Button>
-                      <Button variant="ghost" className="text-[#7F8C8D] hover:bg-[#FFFEF7] p-2 rounded-md">
-                        <MoreVertical className="w-5 h-5" />
-                      </Button>
+                  ) : filteredConversations.length === 0 ? (
+                    <div className="text-center py-8">
+                      <MessageCircle className="w-12 h-12 text-[#7F8C8D] mx-auto mb-4" />
+                      <p className="text-[#7F8C8D]">No conversations yet</p>
+                      <p className="text-sm text-[#7F8C8D]">Start messaging room owners!</p>
                     </div>
-                  </div>
-                </div>
-
-                {/* Messages */}
-                <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                  {mockMessages.map((message) => (
-                    <div
-                      key={message.id}
-                      className={`flex ${message.sender === "me" ? "justify-end" : "justify-start"}`}
-                    >
-                      <div
-                        className={`max-w-xs lg:max-w-md ${
-                          message.sender === "me"
-                            ? "bg-[#F6CB5A] text-[#3C2A1E]"
-                            : "bg-[#FDF8F0] text-[#3C2A1E] border border-[#ECF0F1]"
-                        } rounded-lg p-3 shadow-sm`}
-                      >
-                        <p className="text-sm">{message.message}</p>
-
-                        {message.images && (
-                          <div className="grid grid-cols-2 gap-2 mt-2">
-                            {message.images.map((image, index) => (
-                              <Image
-                                key={index}
-                                src={image || "/placeholder.svg"}
-                                alt={`Shared image ${index + 1}`}
-                                width={150}
-                                height={100}
-                                className="rounded-md object-cover cursor-pointer hover:opacity-90 transition-opacity"
-                              />
-                            ))}
-                          </div>
-                        )}
-
+                  ) : (
+                    <div className="divide-y divide-[#ECF0F1]">
+                      {filteredConversations.map((conversation) => (
                         <div
-                          className={`flex items-center justify-between mt-2 text-xs ${
-                            message.sender === "me" ? "text-[#3C2A1E]/70" : "text-[#7F8C8D]"
+                          key={conversation.userId}
+                          onClick={() => setSelectedConversation(conversation.lastMessage)}
+                          className={`p-4 cursor-pointer hover:bg-[#FDF8F0] transition-colors duration-200 ${
+                            selectedConversation?.sender_id === conversation.userId || 
+                            selectedConversation?.receiver_id === conversation.userId
+                              ? 'bg-[#FDF8F0] border-r-2 border-[#F6CB5A]'
+                              : ''
                           }`}
                         >
-                          <span>{message.timestamp}</span>
-                          {message.sender === "me" && (
-                            <div className="flex items-center">
-                              {message.status === "delivered" && <CheckCircle className="w-3 h-3" />}
-                              {message.status === "sent" && <Clock className="w-3 h-3" />}
+                          <div className="flex items-start justify-between">
+                            <div className="flex items-center space-x-3 flex-1 min-w-0">
+                              <div className="w-10 h-10 bg-[#F6CB5A] rounded-full flex items-center justify-center flex-shrink-0">
+                                <span className="text-[#3C2A1E] font-bold text-sm">
+                                  {conversation.userName[0]?.toUpperCase() || 'U'}
+                                </span>
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center justify-between">
+                                  <h4 className="font-semibold text-[#3C2A1E] truncate">
+                                    {conversation.userName}
+                                  </h4>
+                                  <span className="text-xs text-[#7F8C8D] flex-shrink-0">
+                                    {formatTime(conversation.lastMessage.created_at)}
+                                  </span>
+                                </div>
+                                <p className="text-sm text-[#7F8C8D] truncate">
+                                  {conversation.lastMessage.content}
+                                </p>
+                              </div>
                             </div>
-                          )}
+                            {conversation.unreadCount > 0 && (
+                              <Badge className="bg-[#F6CB5A] text-[#3C2A1E] text-xs">
+                                {conversation.unreadCount}
+                              </Badge>
+                            )}
+                          </div>
                         </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Chat Area */}
+            <div className="lg:col-span-2">
+              <Card className="bg-[#FFFEF7] border border-[#ECF0F1] rounded-xl shadow-sm h-full flex flex-col">
+                {selectedConversation ? (
+                  <>
+                    {/* Chat Header */}
+                    <CardHeader className="border-b border-[#ECF0F1]">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setSelectedConversation(null)}
+                            className="lg:hidden"
+                          >
+                            <ArrowLeft className="w-4 h-4" />
+                          </Button>
+                          <div className="w-10 h-10 bg-[#F6CB5A] rounded-full flex items-center justify-center">
+                            <span className="text-[#3C2A1E] font-bold text-sm">
+                              {getOtherUserName(selectedConversation)?.[0]?.toUpperCase() || 'U'}
+                            </span>
+                          </div>
+                          <div>
+                            <h3 className="font-semibold text-[#3C2A1E]">
+                              {getOtherUserName(selectedConversation) || 'Unknown User'}
+                            </h3>
+                            <p className="text-sm text-[#7F8C8D]">Active now</p>
+                          </div>
+                        </div>
+                        <Button variant="ghost" size="sm">
+                          <MoreVertical className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </CardHeader>
+
+                    {/* Messages */}
+                    <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                      {conversations
+                        .filter(msg => 
+                          (msg.sender_id === selectedConversation.sender_id && msg.receiver_id === selectedConversation.receiver_id) ||
+                          (msg.sender_id === selectedConversation.receiver_id && msg.receiver_id === selectedConversation.sender_id)
+                        )
+                        .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
+                        .map((message) => (
+                          <div
+                            key={message.id}
+                            className={`flex ${message.sender_id === user?.id ? 'justify-end' : 'justify-start'}`}
+                          >
+                            <div
+                              className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+                                message.sender_id === user?.id
+                                  ? 'bg-[#F6CB5A] text-[#3C2A1E]'
+                                  : 'bg-[#ECF0F1] text-[#3C2A1E]'
+                              }`}
+                            >
+                              <p className="text-sm">{message.content}</p>
+                              <div className={`flex items-center justify-end mt-1 ${
+                                message.sender_id === user?.id ? 'text-[#3C2A1E]/70' : 'text-[#7F8C8D]'
+                              }`}>
+                                <Clock className="w-3 h-3 mr-1" />
+                                <span className="text-xs">
+                                  {formatTime(message.created_at)}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+
+                    {/* Message Input */}
+                    <div className="border-t border-[#ECF0F1] p-4">
+                      <div className="flex space-x-2">
+                        <Textarea
+                          placeholder="Type your message..."
+                          value={newMessage}
+                          onChange={(e) => setNewMessage(e.target.value)}
+                          onKeyPress={(e) => {
+                            if (e.key === 'Enter' && !e.shiftKey) {
+                              e.preventDefault()
+                              handleSendMessage()
+                            }
+                          }}
+                          className="flex-1 bg-[#FFFEF7] border border-[#BDC3C7] focus:border-[#F6CB5A] focus:ring-2 focus:ring-[#F6CB5A]/20 rounded-md px-3 py-2 text-sm resize-none"
+                          rows={1}
+                        />
+                        <Button
+                          onClick={handleSendMessage}
+                          disabled={!newMessage.trim() || isSending}
+                          className="bg-[#F6CB5A] hover:bg-[#E6B84A] text-[#3C2A1E] px-4"
+                        >
+                          <Send className="w-4 h-4" />
+                        </Button>
                       </div>
                     </div>
-                  ))}
-                </div>
-
-                {/* Message Input */}
-                <div className="p-4 border-t border-[#ECF0F1] bg-[#FDF8F0]">
-                  <div className="flex items-center space-x-2">
-                    <Button variant="ghost" className="text-[#7F8C8D] hover:bg-[#FFFEF7] p-2 rounded-md">
-                      <Paperclip className="w-5 h-5" />
-                    </Button>
-
-                    <div className="flex-1 relative">
-                      <Input
-                        placeholder="Type your message..."
-                        value={newMessage}
-                        onChange={(e) => setNewMessage(e.target.value)}
-                        onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
-                        className="bg-[#FFFEF7] border border-[#BDC3C7] focus:border-[#F6CB5A] focus:ring-2 focus:ring-[#F6CB5A]/20 rounded-full px-4 py-2 pr-10 text-[#3C2A1E] placeholder-[#7F8C8D]"
-                      />
-                      <Button
-                        variant="ghost"
-                        className="absolute right-2 top-1/2 transform -translate-y-1/2 text-[#7F8C8D] hover:bg-[#FDF8F0] p-1 rounded-full"
-                      >
-                        <Smile className="w-4 h-4" />
-                      </Button>
+                  </>
+                ) : (
+                  <div className="flex-1 flex items-center justify-center">
+                    <div className="text-center">
+                      <MessageCircle className="w-16 h-16 text-[#7F8C8D] mx-auto mb-4" />
+                      <h3 className="text-lg font-semibold text-[#3C2A1E] mb-2">Select a conversation</h3>
+                      <p className="text-[#7F8C8D]">Choose a conversation from the list to start messaging</p>
                     </div>
-
-                    <Button
-                      onClick={handleSendMessage}
-                      disabled={!newMessage.trim()}
-                      className="bg-[#F6CB5A] hover:bg-[#E6B84A] text-[#3C2A1E] p-2 rounded-full disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      <Send className="w-5 h-5" />
-                    </Button>
                   </div>
-
-                  {/* Quick Actions */}
-                  <div className="flex items-center space-x-2 mt-3">
-                    <Button
-                      size="sm"
-                      className="bg-[#FDF8F0] border border-[#F6CB5A] text-[#F6CB5A] hover:bg-[#F6CB5A] hover:text-[#3C2A1E] text-xs py-1 px-3 rounded-full"
-                    >
-                      <Calendar className="w-3 h-3 mr-1" />
-                      Schedule Visit
-                    </Button>
-                    <Button
-                      size="sm"
-                      className="bg-[#FDF8F0] border border-[#F6CB5A] text-[#F6CB5A] hover:bg-[#F6CB5A] hover:text-[#3C2A1E] text-xs py-1 px-3 rounded-full"
-                    >
-                      <MapPin className="w-3 h-3 mr-1" />
-                      Share Location
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                )}
+              </Card>
+            </div>
           </div>
         </div>
-
-        {/* Safety Notice */}
-        <div className="mt-6">
-          <Card className="bg-[#E3F2FD] border border-[#2196F3] rounded-xl">
-            <CardContent className="p-4">
-              <div className="flex items-start space-x-3">
-                <div className="w-6 h-6 bg-[#2196F3] rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <CheckCircle className="w-4 h-4 text-white" />
-                </div>
-                <div>
-                  <h4 className="font-semibold text-[#1976D2] mb-1">Safety Reminder</h4>
-                  <p className="text-sm text-[#1976D2]">
-                    Always meet in public places first and verify identity before sharing personal information. Never
-                    send money or personal documents through messages.
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
       </div>
-    </div>
+    </AuthGuard>
   )
 }
