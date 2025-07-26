@@ -1,67 +1,192 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Coffee, User, Home, ArrowRight, CheckCircle, Shield } from "lucide-react"
-import Link from "next/link"
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useAuth } from "@/contexts/AuthContext";
+import { useRouter } from "next/navigation";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  Loader2,
+  Eye,
+  EyeOff,
+  CheckCircle,
+  Coffee,
+  User,
+  Home,
+  ArrowRight,
+  Shield,
+  CheckCircle2,
+} from "lucide-react";
+import Link from "next/link";
+import Image from "next/image";
 
 export default function RegisterPage() {
-  const [userType, setUserType] = useState("")
-  const [currentStep, setCurrentStep] = useState(1)
+  const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
-    // Basic Info
-    fullName: "",
     email: "",
+    password: "",
+    confirmPassword: "",
+    full_name: "",
+    user_type: "" as "seeker" | "provider" | "",
     phone: "",
-    dateOfBirth: "",
-    gender: "",
-
-    // Profile Info
+    age: "",
+    gender: "" as "male" | "female" | "any" | "",
     occupation: "",
-    university: "",
-    bio: "",
-    languages: [],
+    current_location: "",
+  });
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [verificationSent, setVerificationSent] = useState(false);
 
-    // Preferences (for room seekers)
-    budget: "",
-    preferredAreas: "",
-    roomType: "",
-    moveInDate: "",
+  const { signUp } = useAuth();
+  const router = useRouter();
 
-    // Lifestyle
-    smoking: "",
-    pets: "",
-    socialLevel: "",
-    cleanliness: "",
+  const handleInputChange = (field: string, value: string) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+    setError("");
+  };
 
-    // Verification
-    idType: "",
-    studentId: "",
-    employmentLetter: false,
-  })
-
-  const handleNext = () => {
-    if (currentStep < 4) {
-      setCurrentStep(currentStep + 1)
+  const validateStep = (step: number) => {
+    switch (step) {
+      case 1:
+        if (
+          !formData.email ||
+          !formData.password ||
+          !formData.confirmPassword
+        ) {
+          setError("Please fill in all required fields");
+          return false;
+        }
+        if (formData.password !== formData.confirmPassword) {
+          setError("Passwords do not match");
+          return false;
+        }
+        if (formData.password.length < 6) {
+          setError("Password must be at least 6 characters");
+          return false;
+        }
+        break;
+      case 2:
+        if (!formData.full_name || !formData.user_type) {
+          setError("Please fill in all required fields");
+          return false;
+        }
+        break;
+      case 3:
+        // Optional fields, no validation needed
+        break;
     }
-  }
+    return true;
+  };
 
-  const handlePrevious = () => {
-    if (currentStep > 1) {
-      setCurrentStep(currentStep - 1)
+  const nextStep = () => {
+    if (validateStep(currentStep)) {
+      setCurrentStep((prev) => Math.min(prev + 1, 3));
     }
-  }
+  };
 
-  const handleSubmit = () => {
-    console.log("Registration submitted:", formData)
-    // Handle registration
+  const prevStep = () => {
+    setCurrentStep((prev) => Math.max(prev - 1, 1));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    // Only proceed with account creation if we're on the final step
+    if (currentStep !== 3) {
+      return;
+    }
+
+    if (!validateStep(currentStep)) return;
+
+    setIsLoading(true);
+    setError("");
+
+    try {
+      await signUp(
+        formData.email,
+        formData.password,
+        formData.full_name,
+        formData.user_type as "seeker" | "provider"
+      );
+      setSuccess(true);
+      setVerificationSent(true);
+    } catch (err: any) {
+      setError(err.message || "Failed to create account");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (success) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-[#FFFEF7] to-[#FDF8F0] flex items-center justify-center p-4">
+        <div className="w-full max-w-md">
+          <Card className="bg-[#FFFEF7]/95 backdrop-blur-sm border-2 border-[#ECF0F1] rounded-2xl shadow-2xl">
+            <CardHeader className="text-center">
+              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
+                <CheckCircle className="h-6 w-6 text-green-600" />
+              </div>
+              <CardTitle className="text-[#3C2A1E]">Account Created!</CardTitle>
+              <CardDescription className="text-[#7F8C8D]">
+                We've sent a verification email to{" "}
+                <strong>{formData.email}</strong>. Please check your inbox and
+                click the verification link to activate your account.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="bg-[#E3F2FD] border border-[#2196F3] rounded-lg p-4">
+                <div className="flex items-start space-x-2">
+                  <Shield className="w-5 h-5 text-[#2196F3] flex-shrink-0 mt-0.5" />
+                  <div className="text-sm text-[#1976D2]">
+                    <strong>Email verification required.</strong> You'll need to
+                    verify your email before you can access your account.
+                  </div>
+                </div>
+              </div>
+              <div className="space-y-3">
+                <Link href="/login">
+                  <Button className="w-full bg-[#F6CB5A] hover:bg-[#E6B84A] text-[#3C2A1E] font-semibold py-3 rounded-xl shadow-md hover:shadow-lg transition-all duration-200">
+                    Go to Login
+                  </Button>
+                </Link>
+                <Link href="/">
+                  <Button
+                    variant="outline"
+                    className="w-full border-2 border-[#F6CB5A] text-[#F6CB5A] hover:bg-[#F6CB5A] hover:text-[#3C2A1E] py-3 rounded-xl transition-all duration-200"
+                  >
+                    Back to Home
+                  </Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen bg-[#FFFEF7]">
+    <div className="min-h-screen bg-gradient-to-br from-[#FFFEF7] to-[#FDF8F0]">
       {/* Header */}
       <header className="bg-[#FFFEF7] shadow-sm border-b border-[#ECF0F1] px-6 py-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
@@ -74,535 +199,461 @@ export default function RegisterPage() {
 
           <div className="flex items-center space-x-4">
             <span className="text-[#7F8C8D]">Already have an account?</span>
-            <Link href="/login" className="text-[#F6CB5A] hover:text-[#E6B84A] font-medium">
+            <Link
+              href="/login"
+              className="text-[#F6CB5A] hover:text-[#E6B84A] font-medium"
+            >
               Sign In
             </Link>
           </div>
         </div>
       </header>
 
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {!userType ? (
-          /* User Type Selection */
-          <div className="text-center space-y-8">
-            <div className="space-y-4">
-              <h1 className="text-4xl font-bold text-[#3C2A1E]">Join DebalE</h1>
-              <p className="text-xl text-[#7F8C8D] max-w-2xl mx-auto">
-                Connect with trusted roommates and find your perfect living situation in Ethiopia
-              </p>
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="grid lg:grid-cols-2 gap-8 items-start">
+          {/* Left Side - Branding */}
+          <div className="hidden lg:block space-y-8">
+            <div className="space-y-6">
+              <div className="space-y-4">
+                <h1 className="text-4xl font-bold text-[#3C2A1E] leading-tight">
+                  Join DebalE
+                </h1>
+                <p className="text-xl text-[#7F8C8D] leading-relaxed">
+                  Connect with trusted roommates and find your perfect living
+                  situation in Ethiopia
+                </p>
+              </div>
             </div>
 
-            <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-              <Card
-                className="bg-[#FFFEF7] border-2 border-[#ECF0F1] hover:border-[#F6CB5A] rounded-xl p-8 cursor-pointer transition-all duration-200 hover:shadow-md"
-                onClick={() => setUserType("seeker")}
-              >
-                <CardContent className="p-0 text-center space-y-6">
-                  <div className="w-20 h-20 bg-[#F6CB5A] rounded-full flex items-center justify-center mx-auto">
-                    <User className="w-10 h-10 text-[#3C2A1E]" />
-                  </div>
-                  <div>
-                    <h3 className="text-2xl font-bold text-[#3C2A1E] mb-2">I'm Looking for a Room</h3>
-                    <p className="text-[#7F8C8D]">
-                      Find rooms and roommates that match your lifestyle, budget, and preferences
-                    </p>
-                  </div>
-                  <div className="space-y-2">
-                    <div className="flex items-center text-sm text-[#3C2A1E]">
-                      <CheckCircle className="w-4 h-4 text-[#2ECC71] mr-2" />
-                      Smart matching algorithm
-                    </div>
-                    <div className="flex items-center text-sm text-[#3C2A1E]">
-                      <CheckCircle className="w-4 h-4 text-[#2ECC71] mr-2" />
-                      Verified room providers
-                    </div>
-                    <div className="flex items-center text-sm text-[#3C2A1E]">
-                      <CheckCircle className="w-4 h-4 text-[#2ECC71] mr-2" />
-                      Safe messaging system
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+            <div className="space-y-4">
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-8 bg-[#2ECC71] rounded-full flex items-center justify-center">
+                  <CheckCircle2 className="w-5 h-5 text-white" />
+                </div>
+                <span className="text-[#3C2A1E]">Smart matching algorithm</span>
+              </div>
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-8 bg-[#2ECC71] rounded-full flex items-center justify-center">
+                  <CheckCircle2 className="w-5 h-5 text-white" />
+                </div>
+                <span className="text-[#3C2A1E]">Verified room providers</span>
+              </div>
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-8 bg-[#2ECC71] rounded-full flex items-center justify-center">
+                  <CheckCircle2 className="w-5 h-5 text-white" />
+                </div>
+                <span className="text-[#3C2A1E]">Safe messaging system</span>
+              </div>
+            </div>
 
-              <Card
-                className="bg-[#FFFEF7] border-2 border-[#ECF0F1] hover:border-[#F6CB5A] rounded-xl p-8 cursor-pointer transition-all duration-200 hover:shadow-md"
-                onClick={() => setUserType("provider")}
-              >
-                <CardContent className="p-0 text-center space-y-6">
-                  <div className="w-20 h-20 bg-[#F6CB5A] rounded-full flex items-center justify-center mx-auto">
-                    <Home className="w-10 h-10 text-[#3C2A1E]" />
-                  </div>
-                  <div>
-                    <h3 className="text-2xl font-bold text-[#3C2A1E] mb-2">I Have a Room to Rent</h3>
-                    <p className="text-[#7F8C8D]">
-                      List your room and find trustworthy tenants through our verification system
-                    </p>
-                  </div>
-                  <div className="space-y-2">
-                    <div className="flex items-center text-sm text-[#3C2A1E]">
-                      <CheckCircle className="w-4 h-4 text-[#2ECC71] mr-2" />
-                      Verified tenant profiles
-                    </div>
-                    <div className="flex items-center text-sm text-[#3C2A1E]">
-                      <CheckCircle className="w-4 h-4 text-[#2ECC71] mr-2" />
-                      Easy listing management
-                    </div>
-                    <div className="flex items-center text-sm text-[#3C2A1E]">
-                      <CheckCircle className="w-4 h-4 text-[#2ECC71] mr-2" />
-                      Secure payment handling
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+            <div className="relative">
+              <Image
+                src="https://images.unsplash.com/photo-1531482615713-2afd69097998?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80"
+                alt="Ethiopian students using DebalE platform"
+                width={400}
+                height={300}
+                className="rounded-2xl shadow-xl object-cover"
+              />
+              <div className="absolute -bottom-4 -right-4 bg-[#F6CB5A] rounded-lg p-3 shadow-lg">
+                <div className="text-sm font-semibold text-[#3C2A1E]">
+                  🇪🇹 Made for Ethiopia
+                </div>
+              </div>
             </div>
           </div>
-        ) : (
-          /* Registration Form */
-          <div className="space-y-8">
-            {/* Progress Bar */}
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h1 className="text-3xl font-bold text-[#3C2A1E]">
-                  Create Your {userType === "seeker" ? "Room Seeker" : "Room Provider"} Account
-                </h1>
-                <div className="text-sm text-[#7F8C8D]">Step {currentStep} of 4</div>
-              </div>
 
-              <div className="flex items-center space-x-2">
-                {[1, 2, 3, 4].map((step) => (
-                  <div key={step} className="flex items-center">
-                    <div
-                      className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                        step <= currentStep ? "bg-[#F6CB5A] text-[#3C2A1E]" : "bg-[#ECF0F1] text-[#7F8C8D]"
-                      } font-semibold`}
+          {/* Right Side - Registration Form */}
+          <div className="w-full max-w-md mx-auto lg:mx-0">
+            <Card className="bg-[#FFFEF7]/95 backdrop-blur-sm border-2 border-[#ECF0F1] rounded-2xl shadow-2xl">
+              <CardContent className="p-8 space-y-6">
+                <div className="text-center space-y-2">
+                  <div className="lg:hidden">
+                    <Link
+                      href="/"
+                      className="flex items-center justify-center space-x-2 mb-6"
                     >
-                      {step < currentStep ? <CheckCircle className="w-5 h-5" /> : step}
-                    </div>
-                    {step < 4 && (
-                      <div className={`w-16 h-1 mx-2 ${step < currentStep ? "bg-[#F6CB5A]" : "bg-[#ECF0F1]"}`}></div>
-                    )}
+                      <div className="w-10 h-10 bg-gradient-to-br from-[#F6CB5A] to-[#E6B84A] rounded-lg flex items-center justify-center">
+                        <Coffee className="w-6 h-6 text-[#3C2A1E]" />
+                      </div>
+                      <span className="text-2xl font-bold text-[#3C2A1E]">
+                        DebalE
+                      </span>
+                    </Link>
                   </div>
-                ))}
-              </div>
+                  <h2 className="text-2xl font-bold text-[#3C2A1E]">
+                    Create Your Account
+                  </h2>
+                  <p className="text-[#7F8C8D]">
+                    Step {currentStep} of 3:{" "}
+                    {currentStep === 1
+                      ? "Account Details"
+                      : currentStep === 2
+                      ? "Basic Info"
+                      : "Additional Info"}
+                  </p>
+                </div>
 
-              <div className="flex justify-between text-xs text-[#7F8C8D]">
-                <span>Basic Info</span>
-                <span>Profile</span>
-                <span>Preferences</span>
-                <span>Verification</span>
-              </div>
-            </div>
-
-            <Card className="bg-[#FFFEF7] border border-[#ECF0F1] rounded-xl shadow-sm">
-              <CardContent className="p-8">
-                {/* Step 1: Basic Information */}
-                {currentStep === 1 && (
-                  <div className="space-y-6">
-                    <div>
-                      <h2 className="text-2xl font-bold text-[#3C2A1E] mb-2">Basic Information</h2>
-                      <p className="text-[#7F8C8D]">Let's start with your basic details</p>
-                    </div>
-
-                    <div className="grid md:grid-cols-2 gap-6">
-                      <div className="space-y-2">
-                        <label className="font-semibold text-[#7F8C8D] text-sm">Full Name *</label>
-                        <Input
-                          placeholder="Enter your full name"
-                          value={formData.fullName}
-                          onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                          className="bg-[#FFFEF7] border border-[#BDC3C7] focus:border-[#F6CB5A] focus:ring-2 focus:ring-[#F6CB5A]/20 rounded-md px-4 py-3 text-[#3C2A1E] placeholder-[#7F8C8D]"
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <label className="font-semibold text-[#7F8C8D] text-sm">Email Address *</label>
-                        <Input
-                          type="email"
-                          placeholder="your.email@example.com"
-                          value={formData.email}
-                          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                          className="bg-[#FFFEF7] border border-[#BDC3C7] focus:border-[#F6CB5A] focus:ring-2 focus:ring-[#F6CB5A]/20 rounded-md px-4 py-3 text-[#3C2A1E] placeholder-[#7F8C8D]"
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <label className="font-semibold text-[#7F8C8D] text-sm">Phone Number *</label>
-                        <Input
-                          placeholder="+251 9XX XXX XXX"
-                          value={formData.phone}
-                          onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                          className="bg-[#FFFEF7] border border-[#BDC3C7] focus:border-[#F6CB5A] focus:ring-2 focus:ring-[#F6CB5A]/20 rounded-md px-4 py-3 text-[#3C2A1E] placeholder-[#7F8C8D]"
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <label className="font-semibold text-[#7F8C8D] text-sm">Date of Birth *</label>
-                        <Input
-                          type="date"
-                          value={formData.dateOfBirth}
-                          onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
-                          className="bg-[#FFFEF7] border border-[#BDC3C7] focus:border-[#F6CB5A] focus:ring-2 focus:ring-[#F6CB5A]/20 rounded-md px-4 py-3 text-[#3C2A1E]"
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <label className="font-semibold text-[#7F8C8D] text-sm">Gender *</label>
-                        <select
-                          value={formData.gender}
-                          onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
-                          className="w-full bg-[#FFFEF7] border border-[#BDC3C7] focus:border-[#F6CB5A] focus:ring-2 focus:ring-[#F6CB5A]/20 rounded-md px-4 py-3 text-[#3C2A1E]"
-                        >
-                          <option value="">Select gender</option>
-                          <option value="male">Male</option>
-                          <option value="female">Female</option>
-                          <option value="other">Other</option>
-                        </select>
-                      </div>
-
-                      <div className="space-y-2">
-                        <label className="font-semibold text-[#7F8C8D] text-sm">Password *</label>
-                        <Input
-                          type="password"
-                          placeholder="Create a strong password"
-                          className="bg-[#FFFEF7] border border-[#BDC3C7] focus:border-[#F6CB5A] focus:ring-2 focus:ring-[#F6CB5A]/20 rounded-md px-4 py-3 text-[#3C2A1E] placeholder-[#7F8C8D]"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Step 2: Profile Information */}
-                {currentStep === 2 && (
-                  <div className="space-y-6">
-                    <div>
-                      <h2 className="text-2xl font-bold text-[#3C2A1E] mb-2">Profile Information</h2>
-                      <p className="text-[#7F8C8D]">Tell us more about yourself</p>
-                    </div>
-
-                    <div className="grid md:grid-cols-2 gap-6">
-                      <div className="space-y-2">
-                        <label className="font-semibold text-[#7F8C8D] text-sm">Occupation *</label>
-                        <select
-                          value={formData.occupation}
-                          onChange={(e) => setFormData({ ...formData, occupation: e.target.value })}
-                          className="w-full bg-[#FFFEF7] border border-[#BDC3C7] focus:border-[#F6CB5A] focus:ring-2 focus:ring-[#F6CB5A]/20 rounded-md px-4 py-3 text-[#3C2A1E]"
-                        >
-                          <option value="">Select occupation</option>
-                          <option value="student">Student</option>
-                          <option value="professional">Working Professional</option>
-                          <option value="freelancer">Freelancer</option>
-                          <option value="entrepreneur">Entrepreneur</option>
-                          <option value="other">Other</option>
-                        </select>
-                      </div>
-
-                      {formData.occupation === "student" && (
-                        <div className="space-y-2">
-                          <label className="font-semibold text-[#7F8C8D] text-sm">University/Institution</label>
-                          <Input
-                            placeholder="e.g., Addis Ababa University"
-                            value={formData.university}
-                            onChange={(e) => setFormData({ ...formData, university: e.target.value })}
-                            className="bg-[#FFFEF7] border border-[#BDC3C7] focus:border-[#F6CB5A] focus:ring-2 focus:ring-[#F6CB5A]/20 rounded-md px-4 py-3 text-[#3C2A1E] placeholder-[#7F8C8D]"
-                          />
-                        </div>
-                      )}
-
-                      <div className="space-y-2">
-                        <label className="font-semibold text-[#7F8C8D] text-sm">Languages Spoken</label>
-                        <div className="grid grid-cols-2 gap-2">
-                          {["Amharic", "English", "Oromo", "Tigrinya"].map((lang) => (
-                            <label key={lang} className="flex items-center space-x-2">
-                              <input type="checkbox" className="rounded border-[#BDC3C7]" />
-                              <span className="text-sm text-[#3C2A1E]">{lang}</span>
-                            </label>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="font-semibold text-[#7F8C8D] text-sm">About You</label>
-                      <Textarea
-                        placeholder="Tell potential roommates about yourself, your interests, and what you're looking for..."
-                        value={formData.bio}
-                        onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-                        className="bg-[#FFFEF7] border border-[#BDC3C7] focus:border-[#F6CB5A] focus:ring-2 focus:ring-[#F6CB5A]/20 rounded-md px-4 py-3 text-[#3C2A1E] placeholder-[#7F8C8D] min-h-[120px]"
-                      />
-                    </div>
-                  </div>
-                )}
-
-                {/* Step 3: Preferences */}
-                {currentStep === 3 && (
-                  <div className="space-y-6">
-                    <div>
-                      <h2 className="text-2xl font-bold text-[#3C2A1E] mb-2">
-                        {userType === "seeker" ? "Housing Preferences" : "Tenant Preferences"}
-                      </h2>
-                      <p className="text-[#7F8C8D]">
-                        {userType === "seeker"
-                          ? "Help us find rooms that match your needs"
-                          : "Tell us about your ideal tenant"}
-                      </p>
-                    </div>
-
-                    {userType === "seeker" ? (
-                      <div className="grid md:grid-cols-2 gap-6">
-                        <div className="space-y-2">
-                          <label className="font-semibold text-[#7F8C8D] text-sm">Budget Range (Birr/month)</label>
-                          <Input
-                            placeholder="e.g., 1000 - 2500"
-                            value={formData.budget}
-                            onChange={(e) => setFormData({ ...formData, budget: e.target.value })}
-                            className="bg-[#FFFEF7] border border-[#BDC3C7] focus:border-[#F6CB5A] focus:ring-2 focus:ring-[#F6CB5A]/20 rounded-md px-4 py-3 text-[#3C2A1E] placeholder-[#7F8C8D]"
-                          />
-                        </div>
-
-                        <div className="space-y-2">
-                          <label className="font-semibold text-[#7F8C8D] text-sm">Preferred Areas</label>
-                          <Input
-                            placeholder="e.g., Bole, Sidist Kilo, CMC"
-                            value={formData.preferredAreas}
-                            onChange={(e) => setFormData({ ...formData, preferredAreas: e.target.value })}
-                            className="bg-[#FFFEF7] border border-[#BDC3C7] focus:border-[#F6CB5A] focus:ring-2 focus:ring-[#F6CB5A]/20 rounded-md px-4 py-3 text-[#3C2A1E] placeholder-[#7F8C8D]"
-                          />
-                        </div>
-
-                        <div className="space-y-2">
-                          <label className="font-semibold text-[#7F8C8D] text-sm">Room Type Preference</label>
-                          <select
-                            value={formData.roomType}
-                            onChange={(e) => setFormData({ ...formData, roomType: e.target.value })}
-                            className="w-full bg-[#FFFEF7] border border-[#BDC3C7] focus:border-[#F6CB5A] focus:ring-2 focus:ring-[#F6CB5A]/20 rounded-md px-4 py-3 text-[#3C2A1E]"
-                          >
-                            <option value="">No preference</option>
-                            <option value="private">Private Room</option>
-                            <option value="shared">Shared Room</option>
-                            <option value="master">Master Bedroom</option>
-                          </select>
-                        </div>
-
-                        <div className="space-y-2">
-                          <label className="font-semibold text-[#7F8C8D] text-sm">Move-in Date</label>
-                          <Input
-                            type="date"
-                            value={formData.moveInDate}
-                            onChange={(e) => setFormData({ ...formData, moveInDate: e.target.value })}
-                            className="bg-[#FFFEF7] border border-[#BDC3C7] focus:border-[#F6CB5A] focus:ring-2 focus:ring-[#F6CB5A]/20 rounded-md px-4 py-3 text-[#3C2A1E]"
-                          />
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="grid md:grid-cols-2 gap-6">
-                        <div className="space-y-2">
-                          <label className="font-semibold text-[#7F8C8D] text-sm">Preferred Tenant Type</label>
-                          <select className="w-full bg-[#FFFEF7] border border-[#BDC3C7] focus:border-[#F6CB5A] focus:ring-2 focus:ring-[#F6CB5A]/20 rounded-md px-4 py-3 text-[#3C2A1E]">
-                            <option value="">No preference</option>
-                            <option value="student">Students only</option>
-                            <option value="professional">Professionals only</option>
-                            <option value="mixed">Students & Professionals</option>
-                          </select>
-                        </div>
-
-                        <div className="space-y-2">
-                          <label className="font-semibold text-[#7F8C8D] text-sm">Gender Preference</label>
-                          <select className="w-full bg-[#FFFEF7] border border-[#BDC3C7] focus:border-[#F6CB5A] focus:ring-2 focus:ring-[#F6CB5A]/20 rounded-md px-4 py-3 text-[#3C2A1E]">
-                            <option value="">No preference</option>
-                            <option value="male">Male only</option>
-                            <option value="female">Female only</option>
-                          </select>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Lifestyle Preferences */}
-                    <div className="space-y-4">
-                      <h3 className="text-lg font-bold text-[#3C2A1E]">Lifestyle Preferences</h3>
-
-                      <div className="grid md:grid-cols-2 gap-6">
-                        <div className="space-y-2">
-                          <label className="font-semibold text-[#7F8C8D] text-sm">Smoking</label>
-                          <select
-                            value={formData.smoking}
-                            onChange={(e) => setFormData({ ...formData, smoking: e.target.value })}
-                            className="w-full bg-[#FFFEF7] border border-[#BDC3C7] focus:border-[#F6CB5A] focus:ring-2 focus:ring-[#F6CB5A]/20 rounded-md px-4 py-3 text-[#3C2A1E]"
-                          >
-                            <option value="">Select preference</option>
-                            <option value="non-smoker">Non-smoker</option>
-                            <option value="smoker">Smoker</option>
-                            <option value="no-preference">No preference</option>
-                          </select>
-                        </div>
-
-                        <div className="space-y-2">
-                          <label className="font-semibold text-[#7F8C8D] text-sm">Pets</label>
-                          <select
-                            value={formData.pets}
-                            onChange={(e) => setFormData({ ...formData, pets: e.target.value })}
-                            className="w-full bg-[#FFFEF7] border border-[#BDC3C7] focus:border-[#F6CB5A] focus:ring-2 focus:ring-[#F6CB5A]/20 rounded-md px-4 py-3 text-[#3C2A1E]"
-                          >
-                            <option value="">Select preference</option>
-                            <option value="no-pets">No pets</option>
-                            <option value="pets-ok">Pets OK</option>
-                            <option value="have-pets">I have pets</option>
-                          </select>
-                        </div>
-
-                        <div className="space-y-2">
-                          <label className="font-semibold text-[#7F8C8D] text-sm">Social Level</label>
-                          <select
-                            value={formData.socialLevel}
-                            onChange={(e) => setFormData({ ...formData, socialLevel: e.target.value })}
-                            className="w-full bg-[#FFFEF7] border border-[#BDC3C7] focus:border-[#F6CB5A] focus:ring-2 focus:ring-[#F6CB5A]/20 rounded-md px-4 py-3 text-[#3C2A1E]"
-                          >
-                            <option value="">Select preference</option>
-                            <option value="very-social">Very social</option>
-                            <option value="moderately-social">Moderately social</option>
-                            <option value="quiet">Prefer quiet</option>
-                          </select>
-                        </div>
-
-                        <div className="space-y-2">
-                          <label className="font-semibold text-[#7F8C8D] text-sm">Cleanliness</label>
-                          <select
-                            value={formData.cleanliness}
-                            onChange={(e) => setFormData({ ...formData, cleanliness: e.target.value })}
-                            className="w-full bg-[#FFFEF7] border border-[#BDC3C7] focus:border-[#F6CB5A] focus:ring-2 focus:ring-[#F6CB5A]/20 rounded-md px-4 py-3 text-[#3C2A1E]"
-                          >
-                            <option value="">Select preference</option>
-                            <option value="very-clean">Very clean</option>
-                            <option value="moderately-clean">Moderately clean</option>
-                            <option value="relaxed">Relaxed about cleanliness</option>
-                          </select>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Step 4: Verification */}
-                {currentStep === 4 && (
-                  <div className="space-y-6">
-                    <div>
-                      <h2 className="text-2xl font-bold text-[#3C2A1E] mb-2">Verification</h2>
-                      <p className="text-[#7F8C8D]">Help build trust in our community</p>
-                    </div>
-
-                    <div className="space-y-6">
-                      <div className="bg-[#E3F2FD] border border-[#2196F3] rounded-lg p-4">
-                        <div className="flex items-start space-x-3">
-                          <Shield className="w-6 h-6 text-[#2196F3] flex-shrink-0 mt-0.5" />
-                          <div>
-                            <h4 className="font-semibold text-[#1976D2] mb-1">Why Verification Matters</h4>
-                            <p className="text-sm text-[#1976D2]">
-                              Verification helps create a safer community by confirming identities and building trust
-                              between users.
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="grid md:grid-cols-2 gap-6">
-                        <div className="space-y-2">
-                          <label className="font-semibold text-[#7F8C8D] text-sm">ID Type *</label>
-                          <select
-                            value={formData.idType}
-                            onChange={(e) => setFormData({ ...formData, idType: e.target.value })}
-                            className="w-full bg-[#FFFEF7] border border-[#BDC3C7] focus:border-[#F6CB5A] focus:ring-2 focus:ring-[#F6CB5A]/20 rounded-md px-4 py-3 text-[#3C2A1E]"
-                          >
-                            <option value="">Select ID type</option>
-                            <option value="national-id">National ID</option>
-                            <option value="passport">Passport</option>
-                            <option value="drivers-license">Driver's License</option>
-                          </select>
-                        </div>
-
-                        {formData.occupation === "student" && (
-                          <div className="space-y-2">
-                            <label className="font-semibold text-[#7F8C8D] text-sm">Student ID</label>
-                            <Input
-                              placeholder="Enter your student ID number"
-                              value={formData.studentId}
-                              onChange={(e) => setFormData({ ...formData, studentId: e.target.value })}
-                              className="bg-[#FFFEF7] border border-[#BDC3C7] focus:border-[#F6CB5A] focus:ring-2 focus:ring-[#F6CB5A]/20 rounded-md px-4 py-3 text-[#3C2A1E] placeholder-[#7F8C8D]"
-                            />
-                          </div>
+                {/* Progress Bar */}
+                <div className="flex items-center space-x-2">
+                  {[1, 2, 3].map((step) => (
+                    <div key={step} className="flex items-center">
+                      <div
+                        className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                          step <= currentStep
+                            ? "bg-[#F6CB5A] text-[#3C2A1E]"
+                            : "bg-[#ECF0F1] text-[#7F8C8D]"
+                        } font-semibold`}
+                      >
+                        {step < currentStep ? (
+                          <CheckCircle className="w-5 h-5" />
+                        ) : (
+                          step
                         )}
                       </div>
+                      {step < 3 && (
+                        <div
+                          className={`w-16 h-1 mx-2 ${
+                            step < currentStep ? "bg-[#F6CB5A]" : "bg-[#ECF0F1]"
+                          }`}
+                        ></div>
+                      )}
+                    </div>
+                  ))}
+                </div>
 
-                      <div className="space-y-4">
-                        <h4 className="font-semibold text-[#3C2A1E]">Additional Verification (Optional)</h4>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  {error && (
+                    <Alert
+                      variant="destructive"
+                      className="bg-red-50 border-red-200 text-red-800"
+                    >
+                      <AlertDescription>{error}</AlertDescription>
+                    </Alert>
+                  )}
 
-                        <div className="space-y-3">
-                          <label className="flex items-center space-x-3">
-                            <input
-                              type="checkbox"
-                              className="rounded border-[#BDC3C7]"
-                              checked={formData.employmentLetter}
-                              onChange={(e) => setFormData({ ...formData, employmentLetter: e.target.checked })}
-                            />
-                            <span className="text-[#3C2A1E]">
-                              I can provide an employment letter (for professionals)
-                            </span>
-                          </label>
+                  {currentStep === 1 && (
+                    <>
+                      <div className="space-y-2">
+                        <Label
+                          htmlFor="email"
+                          className="font-semibold text-[#7F8C8D] text-sm"
+                        >
+                          Email *
+                        </Label>
+                        <Input
+                          id="email"
+                          type="email"
+                          placeholder="Enter your email"
+                          value={formData.email}
+                          onChange={(e) =>
+                            handleInputChange("email", e.target.value)
+                          }
+                          className="bg-white border-2 border-[#ECF0F1] focus:border-[#F6CB5A] focus:ring-4 focus:ring-[#F6CB5A]/20 rounded-xl px-4 py-3 text-[#3C2A1E] placeholder-[#7F8C8D] transition-all duration-200"
+                          required
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label
+                          htmlFor="password"
+                          className="font-semibold text-[#7F8C8D] text-sm"
+                        >
+                          Password *
+                        </Label>
+                        <div className="relative">
+                          <Input
+                            id="password"
+                            type={showPassword ? "text" : "password"}
+                            placeholder="Create a password"
+                            value={formData.password}
+                            onChange={(e) =>
+                              handleInputChange("password", e.target.value)
+                            }
+                            className="pr-10 bg-white border-2 border-[#ECF0F1] focus:border-[#F6CB5A] focus:ring-4 focus:ring-[#F6CB5A]/20 rounded-xl px-4 py-3 text-[#3C2A1E] placeholder-[#7F8C8D] transition-all duration-200"
+                            required
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#7F8C8D] hover:text-[#3C2A1E] transition-colors"
+                          >
+                            {showPassword ? (
+                              <EyeOff className="w-5 h-5" />
+                            ) : (
+                              <Eye className="w-5 h-5" />
+                            )}
+                          </button>
                         </div>
                       </div>
 
-                      <div className="bg-[#FDF8F0] border border-[#F6CB5A] rounded-lg p-4">
-                        <div className="flex items-start space-x-3">
-                          <input type="checkbox" className="mt-1" required />
-                          <div className="text-sm text-[#3C2A1E]">
-                            I agree to DebalE's{" "}
-                            <Link href="/terms" className="text-[#F6CB5A] hover:underline">
-                              Terms of Service
-                            </Link>{" "}
-                            and{" "}
-                            <Link href="/privacy" className="text-[#F6CB5A] hover:underline">
-                              Privacy Policy
-                            </Link>
-                            . I confirm that all information provided is accurate and understand that false information
-                            may result in account suspension.
+                      <div className="space-y-2">
+                        <Label
+                          htmlFor="confirmPassword"
+                          className="font-semibold text-[#7F8C8D] text-sm"
+                        >
+                          Confirm Password *
+                        </Label>
+                        <div className="relative">
+                          <Input
+                            id="confirmPassword"
+                            type={showConfirmPassword ? "text" : "password"}
+                            placeholder="Confirm your password"
+                            value={formData.confirmPassword}
+                            onChange={(e) =>
+                              handleInputChange(
+                                "confirmPassword",
+                                e.target.value
+                              )
+                            }
+                            className="pr-10 bg-white border-2 border-[#ECF0F1] focus:border-[#F6CB5A] focus:ring-4 focus:ring-[#F6CB5A]/20 rounded-xl px-4 py-3 text-[#3C2A1E] placeholder-[#7F8C8D] transition-all duration-200"
+                            required
+                          />
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setShowConfirmPassword(!showConfirmPassword)
+                            }
+                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#7F8C8D] hover:text-[#3C2A1E] transition-colors"
+                          >
+                            {showConfirmPassword ? (
+                              <EyeOff className="w-5 h-5" />
+                            ) : (
+                              <Eye className="w-5 h-5" />
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                    </>
+                  )}
+
+                  {currentStep === 2 && (
+                    <>
+                      <div className="space-y-2">
+                        <Label
+                          htmlFor="full_name"
+                          className="font-semibold text-[#7F8C8D] text-sm"
+                        >
+                          Full Name *
+                        </Label>
+                        <Input
+                          id="full_name"
+                          type="text"
+                          placeholder="Enter your full name"
+                          value={formData.full_name}
+                          onChange={(e) =>
+                            handleInputChange("full_name", e.target.value)
+                          }
+                          className="bg-white border-2 border-[#ECF0F1] focus:border-[#F6CB5A] focus:ring-4 focus:ring-[#F6CB5A]/20 rounded-xl px-4 py-3 text-[#3C2A1E] placeholder-[#7F8C8D] transition-all duration-200"
+                          required
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label
+                          htmlFor="user_type"
+                          className="font-semibold text-[#7F8C8D] text-sm"
+                        >
+                          I am a *
+                        </Label>
+                        <Select
+                          value={formData.user_type}
+                          onValueChange={(value) =>
+                            handleInputChange("user_type", value)
+                          }
+                        >
+                          <SelectTrigger className="bg-white border-2 border-[#ECF0F1] focus:border-[#F6CB5A] focus:ring-4 focus:ring-[#F6CB5A]/20 rounded-xl px-4 py-3 text-[#3C2A1E]">
+                            <SelectValue placeholder="Select your role" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="seeker">
+                              Looking for a room
+                            </SelectItem>
+                            <SelectItem value="provider">
+                              Offering a room
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </>
+                  )}
+
+                  {currentStep === 3 && (
+                    <>
+                      <div className="space-y-2">
+                        <Label
+                          htmlFor="phone"
+                          className="font-semibold text-[#7F8C8D] text-sm"
+                        >
+                          Phone Number
+                        </Label>
+                        <Input
+                          id="phone"
+                          type="tel"
+                          placeholder="Enter your phone number"
+                          value={formData.phone}
+                          onChange={(e) =>
+                            handleInputChange("phone", e.target.value)
+                          }
+                          className="bg-white border-2 border-[#ECF0F1] focus:border-[#F6CB5A] focus:ring-4 focus:ring-[#F6CB5A]/20 rounded-xl px-4 py-3 text-[#3C2A1E] placeholder-[#7F8C8D] transition-all duration-200"
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label
+                            htmlFor="age"
+                            className="font-semibold text-[#7F8C8D] text-sm"
+                          >
+                            Age
+                          </Label>
+                          <Input
+                            id="age"
+                            type="number"
+                            placeholder="Age"
+                            value={formData.age}
+                            onChange={(e) =>
+                              handleInputChange("age", e.target.value)
+                            }
+                            className="bg-white border-2 border-[#ECF0F1] focus:border-[#F6CB5A] focus:ring-4 focus:ring-[#F6CB5A]/20 rounded-xl px-4 py-3 text-[#3C2A1E] placeholder-[#7F8C8D] transition-all duration-200"
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label
+                            htmlFor="gender"
+                            className="font-semibold text-[#7F8C8D] text-sm"
+                          >
+                            Gender
+                          </Label>
+                          <Select
+                            value={formData.gender}
+                            onValueChange={(value) =>
+                              handleInputChange("gender", value)
+                            }
+                          >
+                            <SelectTrigger className="bg-white border-2 border-[#ECF0F1] focus:border-[#F6CB5A] focus:ring-4 focus:ring-[#F6CB5A]/20 rounded-xl px-4 py-3 text-[#3C2A1E]">
+                              <SelectValue placeholder="Select gender" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="male">Male</SelectItem>
+                              <SelectItem value="female">Female</SelectItem>
+                              <SelectItem value="any">Any</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label
+                          htmlFor="occupation"
+                          className="font-semibold text-[#7F8C8D] text-sm"
+                        >
+                          Occupation
+                        </Label>
+                        <Input
+                          id="occupation"
+                          type="text"
+                          placeholder="What do you do?"
+                          value={formData.occupation}
+                          onChange={(e) =>
+                            handleInputChange("occupation", e.target.value)
+                          }
+                          className="bg-white border-2 border-[#ECF0F1] focus:border-[#F6CB5A] focus:ring-4 focus:ring-[#F6CB5A]/20 rounded-xl px-4 py-3 text-[#3C2A1E] placeholder-[#7F8C8D] transition-all duration-200"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label
+                          htmlFor="current_location"
+                          className="font-semibold text-[#7F8C8D] text-sm"
+                        >
+                          Current Location
+                        </Label>
+                        <Input
+                          id="current_location"
+                          type="text"
+                          placeholder="City, Ethiopia"
+                          value={formData.current_location}
+                          onChange={(e) =>
+                            handleInputChange(
+                              "current_location",
+                              e.target.value
+                            )
+                          }
+                          className="bg-white border-2 border-[#ECF0F1] focus:border-[#F6CB5A] focus:ring-4 focus:ring-[#F6CB5A]/20 rounded-xl px-4 py-3 text-[#3C2A1E] placeholder-[#7F8C8D] transition-all duration-200"
+                        />
+                      </div>
+                    </>
+                  )}
+
+                  <div className="flex justify-between pt-4">
+                    {currentStep > 1 && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={prevStep}
+                        className="border-2 border-[#F6CB5A] text-[#F6CB5A] hover:bg-[#F6CB5A] hover:text-[#3C2A1E] py-3 px-6 rounded-xl transition-all duration-200"
+                      >
+                        Previous
+                      </Button>
+                    )}
+
+                    {currentStep < 3 ? (
+                      <Button
+                        type="button"
+                        onClick={nextStep}
+                        className="ml-auto bg-[#F6CB5A] hover:bg-[#E6B84A] text-[#3C2A1E] font-semibold py-3 px-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-200"
+                      >
+                        Next
+                      </Button>
+                    ) : (
+                      <Button
+                        type="submit"
+                        className="ml-auto bg-[#F6CB5A] hover:bg-[#E6B84A] text-[#3C2A1E] font-semibold py-3 px-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                        disabled={isLoading}
+                      >
+                        {isLoading ? (
+                          <div className="flex items-center space-x-2">
+                            <div className="w-5 h-5 border-2 border-[#3C2A1E] border-t-transparent rounded-full animate-spin"></div>
+                            <span>Creating Account...</span>
                           </div>
-                        </div>
-                      </div>
+                        ) : (
+                          <div className="flex items-center justify-center space-x-2">
+                            <span>Create Account</span>
+                            <ArrowRight className="w-5 h-5" />
+                          </div>
+                        )}
+                      </Button>
+                    )}
+                  </div>
+                </form>
+
+                <div className="text-center">
+                  <span className="text-[#7F8C8D]">
+                    Already have an account?{" "}
+                  </span>
+                  <Link
+                    href="/login"
+                    className="text-[#F6CB5A] hover:text-[#E6B84A] font-semibold"
+                  >
+                    Sign in
+                  </Link>
+                </div>
+
+                <div className="bg-[#E3F2FD] border border-[#2196F3] rounded-lg p-3">
+                  <div className="flex items-start space-x-2">
+                    <Shield className="w-5 h-5 text-[#2196F3] flex-shrink-0 mt-0.5" />
+                    <div className="text-sm text-[#1976D2]">
+                      <strong>Your data is secure.</strong> We use
+                      industry-standard encryption to protect your information.
                     </div>
                   </div>
-                )}
-
-                {/* Navigation Buttons */}
-                <div className="flex justify-between pt-8 border-t border-[#ECF0F1]">
-                  <Button
-                    onClick={handlePrevious}
-                    disabled={currentStep === 1}
-                    className="border-2 border-[#F6CB5A] text-[#F6CB5A] hover:bg-[#F6CB5A] hover:text-[#3C2A1E] py-3 px-6 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    Previous
-                  </Button>
-
-                  {currentStep < 4 ? (
-                    <Button
-                      onClick={handleNext}
-                      className="bg-[#F6CB5A] hover:bg-[#E6B84A] text-[#3C2A1E] font-semibold py-3 px-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-200"
-                    >
-                      Next Step
-                      <ArrowRight className="ml-2 w-5 h-5" />
-                    </Button>
-                  ) : (
-                    <Button
-                      onClick={handleSubmit}
-                      className="bg-[#2ECC71] hover:bg-[#27AE60] text-white font-semibold py-3 px-8 rounded-lg shadow-md hover:shadow-lg transition-all duration-200"
-                    >
-                      Create Account
-                      <CheckCircle className="ml-2 w-5 h-5" />
-                    </Button>
-                  )}
                 </div>
               </CardContent>
             </Card>
           </div>
-        )}
+        </div>
       </div>
     </div>
-  )
+  );
 }

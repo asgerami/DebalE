@@ -1,407 +1,293 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
+import { useAuth } from "@/contexts/AuthContext";
+import { AuthGuard } from "@/components/auth-guard";
+import { Button } from "@/components/ui/button";
 import {
-  Coffee,
-  Plus,
-  MessageCircle,
-  Heart,
-  Eye,
-  MapPin,
-  Users,
-  Settings,
-  Bell,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  Home,
   Search,
-  TrendingUp,
-  CheckCircle,
-} from "lucide-react"
-import Link from "next/link"
-import Image from "next/image"
-
-const mockUserData = {
-  name: "Sara Mengistu",
-  profileComplete: 85,
-  memberSince: "March 2024",
-  verified: true,
-  savedRooms: 12,
-  messages: 5,
-  viewsThisWeek: 23,
-}
-
-const mockSavedRooms = [
-  {
-    id: 1,
-    title: "Modern Room in Bole",
-    location: "Bole, Addis Ababa",
-    price: 2200,
-    image: "/placeholder.svg?height=150&width=200",
-    status: "Available",
-  },
-  {
-    id: 2,
-    title: "Student Housing Near AAU",
-    location: "Sidist Kilo, Addis Ababa",
-    price: 1500,
-    image: "/placeholder.svg?height=150&width=200",
-    status: "Available",
-  },
-  {
-    id: 3,
-    title: "Shared Apartment",
-    location: "Piazza, Addis Ababa",
-    price: 1800,
-    image: "/placeholder.svg?height=150&width=200",
-    status: "Contacted",
-  },
-]
-
-const mockRecentActivity = [
-  { type: "message", text: "New message from Meron about the room in Bole", time: "2 hours ago" },
-  { type: "view", text: "Your profile was viewed by 3 people", time: "5 hours ago" },
-  { type: "match", text: "New room match found in your preferred area", time: "1 day ago" },
-  { type: "save", text: "Room saved: Modern Studio in Kazanchis", time: "2 days ago" },
-]
-
-const mockRecommendations = [
-  {
-    id: 4,
-    title: "Perfect Match for You",
-    location: "CMC, Addis Ababa",
-    price: 1600,
-    image: "/placeholder.svg?height=150&width=200",
-    matchScore: 95,
-  },
-  {
-    id: 5,
-    title: "Great Value Option",
-    location: "Merkato, Addis Ababa",
-    price: 1200,
-    image: "/placeholder.svg?height=150&width=200",
-    matchScore: 88,
-  },
-]
+  MessageSquare,
+  User,
+  Settings,
+  LogOut,
+  Calendar,
+  MapPin,
+  Phone,
+  Mail,
+} from "lucide-react";
+import Link from "next/link";
 
 export default function DashboardPage() {
-  const [activeTab, setActiveTab] = useState("overview")
+  return (
+    <AuthGuard>
+      <DashboardContent />
+    </AuthGuard>
+  );
+}
+
+function DashboardContent() {
+  const { user, signOut } = useAuth();
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+    } catch (error) {
+      console.error("Error signing out:", error);
+    }
+  };
+
+  const getUserInitials = (name: string) => {
+    return name
+      .split(" ")
+      .map((word) => word[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+  };
 
   return (
-    <div className="min-h-screen bg-[#FFFEF7]">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
-      <header className="bg-[#FFFEF7] shadow-sm border-b border-[#ECF0F1] px-6 py-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <Link href="/" className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-[#F6CB5A] to-[#E6B84A] rounded-lg flex items-center justify-center">
-              <Coffee className="w-5 h-5 text-[#3C2A1E]" />
+      <header className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center py-4">
+            <div className="flex items-center space-x-4">
+              <Link href="/" className="flex items-center space-x-2">
+                <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+                  <Home className="w-5 h-5 text-white" />
+                </div>
+                <span className="text-xl font-bold">DebalE</span>
+              </Link>
             </div>
-            <span className="text-xl font-bold text-[#3C2A1E]">DebalE</span>
-          </Link>
 
-          <nav className="hidden md:flex items-center space-x-8">
-            <Link href="/search" className="text-[#7F8C8D] hover:text-[#3C2A1E] font-medium transition-colors">
-              Find Rooms
-            </Link>
-            <Link
-              href="/messages"
-              className="text-[#7F8C8D] hover:text-[#3C2A1E] font-medium transition-colors relative"
-            >
-              Messages
-              {mockUserData.messages > 0 && (
-                <Badge className="absolute -top-2 -right-2 bg-[#E74C3C] text-white text-xs px-1 min-w-[20px] h-5 flex items-center justify-center rounded-full">
-                  {mockUserData.messages}
-                </Badge>
-              )}
-            </Link>
-            <Button variant="ghost" className="text-[#7F8C8D] hover:bg-[#FDF8F0] p-2 rounded-md">
-              <Bell className="w-5 h-5" />
-            </Button>
-            <div className="w-8 h-8 bg-[#F6CB5A] rounded-full flex items-center justify-center">
-              <span className="text-[#3C2A1E] font-bold text-sm">{mockUserData.name[0]}</span>
+            <div className="flex items-center space-x-4">
+              <Avatar className="h-8 w-8">
+                <AvatarImage src={user?.user_metadata?.avatar_url} />
+                <AvatarFallback>
+                  {getUserInitials(
+                    user?.user_metadata?.full_name || user?.email || "U"
+                  )}
+                </AvatarFallback>
+              </Avatar>
+              <Button variant="ghost" size="sm" onClick={handleSignOut}>
+                <LogOut className="h-4 w-4 mr-2" />
+                Sign Out
+              </Button>
             </div>
-          </nav>
+          </div>
         </div>
       </header>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Welcome Section */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h1 className="text-3xl font-bold text-[#3C2A1E]">Welcome back, {mockUserData.name.split(" ")[0]}! 👋</h1>
-              <p className="text-[#7F8C8D]">Here's what's happening with your room search</p>
-            </div>
-            <Link href="/list-room">
-              <Button className="bg-[#F6CB5A] hover:bg-[#E6B84A] text-[#3C2A1E] font-semibold py-3 px-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-200">
-                <Plus className="w-5 h-5 mr-2" />
-                List a Room
-              </Button>
-            </Link>
-          </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* User Profile Card */}
+          <div className="lg:col-span-1">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center space-x-4">
+                  <Avatar className="h-16 w-16">
+                    <AvatarImage src={user?.user_metadata?.avatar_url} />
+                    <AvatarFallback className="text-lg">
+                      {getUserInitials(
+                        user?.user_metadata?.full_name || user?.email || "U"
+                      )}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <CardTitle className="text-xl">
+                      {user?.user_metadata?.full_name || "User"}
+                    </CardTitle>
+                    <CardDescription>
+                      {user?.user_metadata?.user_type === "seeker"
+                        ? "Room Seeker"
+                        : "Room Provider"}
+                    </CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
+                  <Mail className="h-4 w-4" />
+                  <span>{user?.email}</span>
+                </div>
+                {user?.user_metadata?.phone && (
+                  <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
+                    <Phone className="h-4 w-4" />
+                    <span>{user.user_metadata.phone}</span>
+                  </div>
+                )}
+                {user?.user_metadata?.current_location && (
+                  <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
+                    <MapPin className="h-4 w-4" />
+                    <span>{user.user_metadata.current_location}</span>
+                  </div>
+                )}
 
-          {/* Profile Completion */}
-          <Card className="bg-gradient-to-r from-[#F6CB5A] to-[#E6B84A] border-0 rounded-xl p-6 text-[#3C2A1E]">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="font-bold text-lg mb-1">Complete Your Profile</h3>
-                <p className="opacity-90">Get better matches by completing your profile</p>
-              </div>
-              <div className="text-right">
-                <div className="text-2xl font-bold">{mockUserData.profileComplete}%</div>
-                <Link href="/profile" className="text-sm underline hover:no-underline">
-                  Complete now
-                </Link>
-              </div>
-            </div>
-            <div className="mt-4 bg-[#3C2A1E]/20 rounded-full h-2">
-              <div
-                className="bg-[#3C2A1E] h-2 rounded-full transition-all duration-300"
-                style={{ width: `${mockUserData.profileComplete}%` }}
-              ></div>
-            </div>
-          </Card>
-        </div>
-
-        {/* Stats Cards */}
-        <div className="grid md:grid-cols-4 gap-6 mb-8">
-          <Card className="bg-[#FFFEF7] border border-[#ECF0F1] rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow duration-200">
-            <CardContent className="p-0 flex items-center space-x-4">
-              <div className="w-12 h-12 bg-[#F6CB5A] rounded-lg flex items-center justify-center">
-                <Heart className="w-6 h-6 text-[#3C2A1E]" />
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-[#3C2A1E]">{mockUserData.savedRooms}</div>
-                <div className="text-sm text-[#7F8C8D]">Saved Rooms</div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-[#FFFEF7] border border-[#ECF0F1] rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow duration-200">
-            <CardContent className="p-0 flex items-center space-x-4">
-              <div className="w-12 h-12 bg-[#2ECC71] rounded-lg flex items-center justify-center">
-                <MessageCircle className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-[#3C2A1E]">{mockUserData.messages}</div>
-                <div className="text-sm text-[#7F8C8D]">New Messages</div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-[#FFFEF7] border border-[#ECF0F1] rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow duration-200">
-            <CardContent className="p-0 flex items-center space-x-4">
-              <div className="w-12 h-12 bg-[#3498DB] rounded-lg flex items-center justify-center">
-                <Eye className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-[#3C2A1E]">{mockUserData.viewsThisWeek}</div>
-                <div className="text-sm text-[#7F8C8D]">Profile Views</div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-[#FFFEF7] border border-[#ECF0F1] rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow duration-200">
-            <CardContent className="p-0 flex items-center space-x-4">
-              <div className="w-12 h-12 bg-[#E67E22] rounded-lg flex items-center justify-center">
-                <TrendingUp className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-[#3C2A1E]">12</div>
-                <div className="text-sm text-[#7F8C8D]">Matches Found</div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="grid lg:grid-cols-3 gap-8">
-          {/* Main Content */}
-          <div className="lg:col-span-2 space-y-8">
-            {/* Saved Rooms */}
-            <Card className="bg-[#FFFEF7] border border-[#ECF0F1] rounded-xl shadow-sm">
-              <CardHeader className="pb-4">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-xl font-bold text-[#3C2A1E]">Saved Rooms</CardTitle>
-                  <Link href="/saved" className="text-[#F6CB5A] hover:text-[#E6B84A] text-sm font-medium">
-                    View all →
+                <div className="pt-4">
+                  <Link href="/profile">
+                    <Button variant="outline" className="w-full">
+                      <User className="h-4 w-4 mr-2" />
+                      Edit Profile
+                    </Button>
                   </Link>
                 </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {mockSavedRooms.map((room) => (
-                  <div key={room.id} className="flex items-center space-x-4 p-4 bg-[#FDF8F0] rounded-lg">
-                    <Image
-                      src={room.image || "/placeholder.svg"}
-                      alt={room.title}
-                      width={80}
-                      height={60}
-                      className="rounded-md object-cover"
-                    />
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-[#3C2A1E]">{room.title}</h3>
-                      <div className="flex items-center text-sm text-[#7F8C8D]">
-                        <MapPin className="w-4 h-4 mr-1" />
-                        {room.location}
-                      </div>
-                      <div className="text-[#F6CB5A] font-bold">{room.price} Birr/month</div>
-                    </div>
-                    <div className="text-right">
-                      <Badge
-                        className={`${
-                          room.status === "Available" ? "bg-[#2ECC71] text-white" : "bg-[#F6CB5A] text-[#3C2A1E]"
-                        } px-2 py-1 text-xs`}
-                      >
-                        {room.status}
-                      </Badge>
-                      <div className="mt-2">
-                        <Link href={`/listing/${room.id}`}>
-                          <Button
-                            size="sm"
-                            className="bg-[#F6CB5A] hover:bg-[#E6B84A] text-[#3C2A1E] text-xs py-1 px-3 rounded"
-                          >
-                            View
-                          </Button>
-                        </Link>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-
-            {/* Recent Activity */}
-            <Card className="bg-[#FFFEF7] border border-[#ECF0F1] rounded-xl shadow-sm">
-              <CardHeader className="pb-4">
-                <CardTitle className="text-xl font-bold text-[#3C2A1E]">Recent Activity</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {mockRecentActivity.map((activity, index) => (
-                  <div
-                    key={index}
-                    className="flex items-start space-x-3 p-3 hover:bg-[#FDF8F0] rounded-lg transition-colors"
-                  >
-                    <div
-                      className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                        activity.type === "message"
-                          ? "bg-[#2ECC71]"
-                          : activity.type === "view"
-                            ? "bg-[#3498DB]"
-                            : activity.type === "match"
-                              ? "bg-[#F6CB5A]"
-                              : "bg-[#E67E22]"
-                      }`}
-                    >
-                      {activity.type === "message" && <MessageCircle className="w-4 h-4 text-white" />}
-                      {activity.type === "view" && <Eye className="w-4 h-4 text-white" />}
-                      {activity.type === "match" && <Users className="w-4 h-4 text-[#3C2A1E]" />}
-                      {activity.type === "save" && <Heart className="w-4 h-4 text-white" />}
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-[#3C2A1E] text-sm">{activity.text}</p>
-                      <p className="text-[#7F8C8D] text-xs">{activity.time}</p>
-                    </div>
-                  </div>
-                ))}
               </CardContent>
             </Card>
           </div>
 
-          {/* Sidebar */}
-          <div className="space-y-6">
-            {/* Quick Actions */}
-            <Card className="bg-[#FFFEF7] border border-[#ECF0F1] rounded-xl shadow-sm">
-              <CardHeader className="pb-4">
-                <CardTitle className="text-lg font-bold text-[#3C2A1E]">Quick Actions</CardTitle>
+          {/* Main Dashboard Content */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Welcome Section */}
+            <Card>
+              <CardHeader>
+                <CardTitle>
+                  Welcome back,{" "}
+                  {user?.user_metadata?.full_name?.split(" ")[0] || "there"}! 👋
+                </CardTitle>
+                <CardDescription>
+                  Here's what's happening with your housing journey today.
+                </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-3">
-                <Link href="/search">
-                  <Button className="w-full bg-[#F6CB5A] hover:bg-[#E6B84A] text-[#3C2A1E] font-semibold py-3 rounded-lg transition-all duration-200">
-                    <Search className="w-4 h-4 mr-2" />
-                    Search Rooms
-                  </Button>
-                </Link>
-                <Link href="/messages">
-                  <Button className="w-full border-2 border-[#F6CB5A] text-[#F6CB5A] hover:bg-[#F6CB5A] hover:text-[#3C2A1E] py-3 rounded-lg transition-all duration-200">
-                    <MessageCircle className="w-4 h-4 mr-2" />
-                    View Messages
-                  </Button>
-                </Link>
-                <Link href="/profile">
-                  <Button className="w-full text-[#7F8C8D] hover:bg-[#FDF8F0] py-3 rounded-lg transition-colors duration-200">
-                    <Settings className="w-4 h-4 mr-2" />
-                    Edit Profile
-                  </Button>
-                </Link>
-              </CardContent>
             </Card>
 
-            {/* Recommendations */}
-            <Card className="bg-gradient-to-br from-[#FDF8F0] to-[#FFFEF7] border-2 border-[#F6CB5A] rounded-xl shadow-md">
-              <CardHeader className="pb-4">
-                <CardTitle className="text-lg font-bold text-[#3C2A1E]">Recommended for You</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {mockRecommendations.map((room) => (
-                  <div key={room.id} className="space-y-3">
-                    <Image
-                      src={room.image || "/placeholder.svg"}
-                      alt={room.title}
-                      width={200}
-                      height={120}
-                      className="w-full h-24 object-cover rounded-lg"
-                    />
-                    <div>
-                      <div className="flex items-center justify-between mb-1">
-                        <h3 className="font-semibold text-[#3C2A1E] text-sm">{room.title}</h3>
-                        <Badge className="bg-[#2ECC71] text-white text-xs px-2 py-1">{room.matchScore}% match</Badge>
+            {/* Quick Actions */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <Link href="/search">
+                <Card className="hover:shadow-md transition-shadow cursor-pointer">
+                  <CardContent className="p-6">
+                    <div className="flex items-center space-x-3">
+                      <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
+                        <Search className="h-6 w-6 text-blue-600 dark:text-blue-400" />
                       </div>
-                      <div className="flex items-center text-xs text-[#7F8C8D] mb-2">
-                        <MapPin className="w-3 h-3 mr-1" />
-                        {room.location}
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-[#F6CB5A] font-bold text-sm">{room.price} Birr</span>
-                        <Link href={`/listing/${room.id}`}>
-                          <Button
-                            size="sm"
-                            className="bg-[#F6CB5A] hover:bg-[#E6B84A] text-[#3C2A1E] text-xs py-1 px-3 rounded"
-                          >
-                            View
-                          </Button>
-                        </Link>
+                      <div>
+                        <h3 className="font-semibold">Find Rooms</h3>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          Browse available listings
+                        </p>
                       </div>
                     </div>
+                  </CardContent>
+                </Card>
+              </Link>
+
+              <Link href="/list-room">
+                <Card className="hover:shadow-md transition-shadow cursor-pointer">
+                  <CardContent className="p-6">
+                    <div className="flex items-center space-x-3">
+                      <div className="p-2 bg-green-100 dark:bg-green-900 rounded-lg">
+                        <Home className="h-6 w-6 text-green-600 dark:text-green-400" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold">List a Room</h3>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          Rent out your space
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
+
+              <Link href="/messages">
+                <Card className="hover:shadow-md transition-shadow cursor-pointer">
+                  <CardContent className="p-6">
+                    <div className="flex items-center space-x-3">
+                      <div className="p-2 bg-purple-100 dark:bg-purple-900 rounded-lg">
+                        <MessageSquare className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold">Messages</h3>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          View conversations
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
+            </div>
+
+            {/* Recent Activity */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Recent Activity</CardTitle>
+                <CardDescription>
+                  Your latest interactions and updates
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                    <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-full">
+                      <Calendar className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium">Account created</p>
+                      <p className="text-xs text-gray-600 dark:text-gray-400">
+                        {new Date(
+                          user?.created_at || Date.now()
+                        ).toLocaleDateString()}
+                      </p>
+                    </div>
                   </div>
-                ))}
+
+                  <div className="text-center py-4">
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      No recent activity yet. Start by exploring rooms or
+                      listing your space!
+                    </p>
+                  </div>
+                </div>
               </CardContent>
             </Card>
 
-            {/* Profile Status */}
-            <Card className="bg-[#FFFEF7] border border-[#ECF0F1] rounded-xl shadow-sm">
-              <CardHeader className="pb-4">
-                <CardTitle className="text-lg font-bold text-[#3C2A1E]">Profile Status</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-[#3C2A1E]">Profile Complete</span>
-                  <span className="text-sm font-bold text-[#F6CB5A]">{mockUserData.profileComplete}%</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-[#3C2A1E]">Verification</span>
-                  <div className="flex items-center">
-                    <CheckCircle className="w-4 h-4 text-[#2ECC71] mr-1" />
-                    <span className="text-sm text-[#2ECC71]">Verified</span>
+            {/* Stats Overview */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Card>
+                <CardContent className="p-6">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-blue-600">0</div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      Saved Listings
+                    </p>
                   </div>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-[#3C2A1E]">Member Since</span>
-                  <span className="text-sm text-[#7F8C8D]">{mockUserData.memberSince}</span>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-6">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-green-600">0</div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      Active Matches
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-6">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-purple-600">0</div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      Messages
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </div>
       </div>
     </div>
-  )
+  );
 }

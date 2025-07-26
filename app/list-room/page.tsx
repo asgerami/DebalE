@@ -21,7 +21,11 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
-import { useStorageUpload } from "../hooks/useStorageUpload";
+import { useStorageUpload } from "@/hooks/useStorageUpload";
+import { createListing, getProfile, createProfile } from "@/lib/supabase-crud";
+import { useAuth } from "@/contexts/AuthContext";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 const amenityOptions = [
   { id: "wifi", label: "WiFi", icon: Wifi },
@@ -36,7 +40,11 @@ const amenityOptions = [
 
 export default function ListRoomPage() {
   const { uploading, error, url, uploadListing } = useStorageUpload();
+  const { user, loading } = useAuth();
+  const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -52,10 +60,16 @@ export default function ListRoomPage() {
     occupation: "",
   });
 
-  const [selectedAmenities, setSelectedAmenities] = useState([]);
-  const [uploadedPhotos, setUploadedPhotos] = useState([]);
+  const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
+  const [uploadedPhotos, setUploadedPhotos] = useState<File[]>([]);
+  const [photoUrls, setPhotoUrls] = useState<string[]>([]);
 
-  const handleAmenityToggle = (amenityId) => {
+  // Debug useEffect to monitor user state
+  useEffect(() => {
+    console.log("User state changed:", { user, loading });
+  }, [user, loading]);
+
+  const handleAmenityToggle = (amenityId: string) => {
     setSelectedAmenities((prev) =>
       prev.includes(amenityId)
         ? prev.filter((id) => id !== amenityId)
@@ -75,10 +89,165 @@ export default function ListRoomPage() {
     }
   };
 
-  const handleSubmit = () => {
-    // Handle form submission
-    console.log("Form submitted:", formData);
+  const handlePhotoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (files) {
+      const newPhotos = Array.from(files);
+      setUploadedPhotos((prev) => [...prev, ...newPhotos]);
+
+      // Create preview URLs
+      newPhotos.forEach((file) => {
+        const url = URL.createObjectURL(file);
+        setPhotoUrls((prev) => [...prev, url]);
+      });
+    }
   };
+
+  const removePhoto = (index: number) => {
+    setUploadedPhotos((prev) => prev.filter((_, i) => i !== index));
+    setPhotoUrls((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleSubmit = async () => {
+    console.log("Submit clicked, user:", user); // Debug log
+    console.log("User ID:", user?.id); // Debug log
+    console.log("Loading state:", loading); // Debug log
+
+    if (!user) {
+      setSubmitError("You must be logged in to create a listing");
+      return;
+    }
+
+    if (!user.id) {
+      setSubmitError("User ID is missing. Please try logging in again.");
+      return;
+    }
+
+    // Capture user ID at the beginning to avoid race conditions
+    const userId = user.id;
+    console.log("Captured user ID:", userId); // Debug log
+
+    setIsSubmitting(true);
+    setSubmitError("");
+
+    try {
+      console.log("About to check profile for user ID:", userId); // Debug log
+
+      // Check if user has a profile, create one if not
+      let userProfile;
+      try {
+        userProfile = await getProfile(user.id);
+        console.log("Profile found:", userProfile); // Debug log
+      } catch (error) {
+        console.log(
+          "Profile not found, creating new profile for user ID:",
+          user.id
+        ); // Debug log
+        // Profile doesn't exist, create one
+        userProfile = await createProfile({
+          id: user.id,
+          user_type: "provider",
+          full_name:
+            user.user_metadata?.full_name ||
+            user.email?.split("@")[0] ||
+            "User",
+          age: null,
+          gender: null,
+          phone: null,
+          phone_verified: false,
+          avatar_url: null,
+          occupation: null,
+          languages: [],
+          current_location: null,
+          bio: null,
+        });
+        console.log("New profile created:", userProfile); // Debug log
+      }
+
+      // Double-check user is still valid before creating listing
+      if (!user || !user.id) {
+        throw new Error("User session expired. Please log in again.");
+      }
+
+      const listingData = {
+        provider_id: user.id,
+        title: formData.title,
+        description: formData.description,
+        area: formData.location,
+        monthly_rent: parseInt(formData.price) || 0,
+        room_type: formData.roomType,
+        house_rules: formData.houseRules,
+        available_from: formData.availability,
+        preferred_tenant_gender:
+          (formData.genderPreference as "male" | "female" | "any") || "any",
+        preferred_tenant_age_min: formData.ageRange
+          ? parseInt(formData.ageRange.split("-")[0])
+          : 18,
+        preferred_tenant_age_max: formData.ageRange
+          ? parseInt(formData.ageRange.split("-")[1])
+          : 99,
+        preferred_tenant_occupation: formData.occupation
+          ? [formData.occupation]
+          : [],
+        is_active: true,
+        // Set default values for required fields
+        utilities_included: false,
+        furnished: false,
+        private_bathroom: false,
+        wifi: selectedAmenities.includes("wifi"),
+        kitchen_access: selectedAmenities.includes("kitchen"),
+        laundry: selectedAmenities.includes("laundry"),
+        parking: selectedAmenities.includes("parking"),
+        security: selectedAmenities.includes("security"),
+        current_roommates: 0,
+        max_roommates: 4,
+        featured: false,
+      };
+
+      console.log("Creating listing with data:", listingData); // Debug log
+      const newListing = await createListing(listingData);
+      console.log("Listing created successfully:", newListing);
+
+      // Upload photos if any were selected
+      if (uploadedPhotos.length > 0) {
+        try {
+          for (let i = 0; i < uploadedPhotos.length; i++) {
+            await uploadListing(uploadedPhotos[i], newListing.id);
+          }
+          console.log("Photos uploaded successfully");
+        } catch (photoError) {
+          console.error("Error uploading photos:", photoError);
+          // Continue with redirect even if photo upload fails
+        }
+      }
+
+      // Redirect to the listing page or show success message
+      router.push(`/listing/${newListing.id}`);
+    } catch (err: any) {
+      console.error("Error creating listing:", err);
+      setSubmitError(err.message || "Failed to create listing");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Show loading state while auth is being checked
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#FFFEF7] flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#F6CB5A] mx-auto mb-4"></div>
+          <p className="text-[#7F8C8D]">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Redirect to login if user is not authenticated
+  if (!user) {
+    router.push("/login");
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-[#FFFEF7]">
@@ -86,10 +255,10 @@ export default function ListRoomPage() {
       <header className="bg-[#FFFEF7] shadow-sm border-b border-[#ECF0F1] px-6 py-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            <Link href="/dashboard" className="flex items-center space-x-2">
+            <Link href="/" className="flex items-center space-x-2">
               <ArrowLeft className="w-5 h-5 text-[#7F8C8D]" />
               <span className="text-[#7F8C8D] hover:text-[#3C2A1E]">
-                Back to Dashboard
+                Back to Home
               </span>
             </Link>
           </div>
@@ -390,40 +559,71 @@ export default function ListRoomPage() {
                 </div>
 
                 <div className="space-y-4">
-                  <div className="border-2 border-dashed border-[#F6CB5A] rounded-xl p-8 text-center bg-[#FDF8F0]">
-                    <Camera className="w-12 h-12 text-[#F6CB5A] mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold text-[#3C2A1E] mb-2">
-                      Upload Room Photos
-                    </h3>
-                    <p className="text-[#7F8C8D] mb-4">
-                      Add at least 3 photos of your room and common areas
-                    </p>
-                    <Button className="bg-[#F6CB5A] hover:bg-[#E6B84A] text-[#3C2A1E] font-semibold py-3 px-6 rounded-lg">
-                      <Upload className="w-5 h-5 mr-2" />
-                      Choose Photos
-                    </Button>
+                  <div className="border-2 border-dashed border-[#F6CB5A] rounded-xl p-8 text-center bg-[#FDF8F0] hover:bg-[#F6CB5A]/10 transition-colors duration-200">
+                    <input
+                      type="file"
+                      multiple
+                      accept="image/*"
+                      onChange={handlePhotoUpload}
+                      className="hidden"
+                      id="photo-upload"
+                    />
+                    <label htmlFor="photo-upload" className="cursor-pointer">
+                      <Camera className="w-12 h-12 text-[#F6CB5A] mx-auto mb-4" />
+                      <h3 className="text-lg font-semibold text-[#3C2A1E] mb-2">
+                        Upload Room Photos
+                      </h3>
+                      <p className="text-[#7F8C8D] mb-4">
+                        Add at least 3 photos of your room and common areas
+                      </p>
+                      <div className="bg-[#F6CB5A] hover:bg-[#E6B84A] text-[#3C2A1E] font-semibold py-3 px-6 rounded-lg inline-flex items-center transition-colors duration-200">
+                        <Upload className="w-5 h-5 mr-2" />
+                        Choose Photos
+                      </div>
+                    </label>
                   </div>
 
-                  {/* Mock uploaded photos */}
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    {[1, 2, 3].map((index) => (
-                      <div key={index} className="relative group">
-                        <Image
-                          src={`/placeholder.svg?height=200&width=300&query=Ethiopian apartment room ${index}`}
-                          alt={`Room photo ${index}`}
-                          width={300}
-                          height={200}
-                          className="w-full h-32 object-cover rounded-lg"
-                        />
-                        <button className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <X className="w-4 h-4" />
-                        </button>
-                        <div className="absolute bottom-2 left-2 bg-black/50 text-white text-xs px-2 py-1 rounded">
-                          Photo {index}
+                  {/* Uploaded photos */}
+                  {uploadedPhotos.length > 0 && (
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                      {uploadedPhotos.map((photo, index) => (
+                        <div key={index} className="relative group">
+                          <Image
+                            src={photoUrls[index]}
+                            alt={`Room photo ${index + 1}`}
+                            width={300}
+                            height={200}
+                            className="w-full h-32 object-cover rounded-lg"
+                          />
+                          <button
+                            onClick={() => removePhoto(index)}
+                            className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                          <div className="absolute bottom-2 left-2 bg-black/50 text-white text-xs px-2 py-1 rounded">
+                            Photo {index + 1}
+                          </div>
                         </div>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Placeholder when no photos */}
+                  {uploadedPhotos.length === 0 && (
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                      {[1, 2, 3].map((index) => (
+                        <div key={index} className="relative group">
+                          <div className="w-full h-32 bg-gray-200 rounded-lg flex items-center justify-center">
+                            <Camera className="w-8 h-8 text-gray-400" />
+                          </div>
+                          <div className="absolute bottom-2 left-2 bg-black/50 text-white text-xs px-2 py-1 rounded">
+                            No photo {index}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
 
                   <div className="bg-[#E3F2FD] border border-[#2196F3] rounded-lg p-4">
                     <h4 className="font-semibold text-[#1976D2] mb-2">
@@ -519,6 +719,13 @@ export default function ListRoomPage() {
                     </CardContent>
                   </Card>
 
+                  {/* Error Display */}
+                  {submitError && (
+                    <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                      <div className="text-sm text-red-800">{submitError}</div>
+                    </div>
+                  )}
+
                   {/* Terms and Conditions */}
                   <div className="bg-[#FDF8F0] border border-[#F6CB5A] rounded-lg p-4">
                     <div className="flex items-start space-x-3">
@@ -561,9 +768,17 @@ export default function ListRoomPage() {
               ) : (
                 <Button
                   onClick={handleSubmit}
-                  className="bg-[#2ECC71] hover:bg-[#27AE60] text-white font-semibold py-3 px-8 rounded-lg shadow-md hover:shadow-lg transition-all duration-200"
+                  disabled={isSubmitting}
+                  className="bg-[#2ECC71] hover:bg-[#27AE60] text-white font-semibold py-3 px-8 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Publish Listing
+                  {isSubmitting ? (
+                    <div className="flex items-center space-x-2">
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      <span>Publishing...</span>
+                    </div>
+                  ) : (
+                    "Publish Listing"
+                  )}
                 </Button>
               )}
             </div>

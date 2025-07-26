@@ -1,200 +1,269 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Badge } from "@/components/ui/badge"
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
-  Coffee,
-  ArrowLeft,
-  User,
-  Edit,
-  Camera,
-  Shield,
-  CheckCircle,
-  Star,
-  MapPin,
-  Phone,
-  Mail,
-  Heart,
-  Settings,
-  Bell,
-  Lock,
-} from "lucide-react"
-import Link from "next/link"
-import { useProfile } from '../../hooks/useProfile'
-
-const mockUserProfile = {
-  id: "user_123",
-  fullName: "Sara Mengistu",
-  email: "sara.mengistu@email.com",
-  phone: "+251 911 123 456",
-  age: 22,
-  gender: "female",
-  occupation: "Student",
-  university: "Addis Ababa University",
-  currentLocation: "Sidist Kilo, Addis Ababa",
-  preferredAreas: ["Bole", "Sidist Kilo", "CMC"],
-  budget: { min: 1000, max: 2500 },
-  bio: "Engineering student at AAU looking for a quiet, clean living environment. I enjoy reading, coffee, and studying. Looking for like-minded roommates who value cleanliness and respect.",
-  languages: ["Amharic", "English", "Oromo"],
-  lifestyle: {
-    smoking: "non-smoker",
-    pets: "no-pets",
-    cleanliness: "very-clean",
-    socialLevel: "moderately-social",
-  },
-  preferences: {
-    roomType: "private",
-    genderPreference: "female-only",
-    agePreference: "18-25",
-  },
-  verification: {
-    phone: true,
-    email: true,
-    studentId: true,
-    nationalId: false,
-  },
-  profileImage: "/placeholder.svg?height=150&width=150",
-  joinDate: "March 2024",
-  rating: 4.8,
-  reviewCount: 12,
-  completionPercentage: 85,
-}
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { useAuth } from "@/contexts/AuthContext";
+import { useProfile } from "@/hooks/useProfile";
+import { AuthGuard } from "@/components/auth-guard";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Loader2, Camera, Save, X, CheckCircle, Shield } from "lucide-react";
+import Link from "next/link";
 
 export default function ProfilePage() {
-  // Replace this with your actual user ID from auth context/session
-  const userId = 'REPLACE_WITH_AUTH_USER_ID'
-  const { profile, loading, error, saveProfile } = useProfile(userId)
+  return (
+    <AuthGuard>
+      <ProfileContent />
+    </AuthGuard>
+  );
+}
 
-  const [isEditing, setIsEditing] = useState(false)
-  const [activeTab, setActiveTab] = useState("profile")
-  const [showPassword, setShowPassword] = useState(false)
-  const [profileData, setProfileData] = useState(mockUserProfile)
+function ProfileContent() {
+  const { user } = useAuth();
+  const { profile, loading, error, saveProfile } = useProfile(user?.id || null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [activeTab, setActiveTab] = useState("profile");
+  const [formData, setFormData] = useState({
+    full_name: "",
+    age: "",
+    gender: "" as "male" | "female" | "any" | "",
+    phone: "",
+    occupation: "",
+    current_location: "",
+    bio: "",
+    languages: [] as string[],
+  });
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
+  const [saveSuccess, setSaveSuccess] = useState(false);
 
-  const handleSave = () => {
-    setIsEditing(false)
-    // Handle save to Supabase
-    console.log("Saving profile:", profileData)
-  }
+  // Initialize form data when profile loads
+  useState(() => {
+    if (profile) {
+      setFormData({
+        full_name: profile.full_name || "",
+        age: profile.age?.toString() || "",
+        gender: profile.gender || "",
+        phone: profile.phone || "",
+        occupation: profile.occupation || "",
+        current_location: profile.current_location || "",
+        bio: profile.bio || "",
+        languages: profile.languages || [],
+      });
+    }
+  });
+
+  const handleInputChange = (field: string, value: string | string[]) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+    setSaveError("");
+  };
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    setSaveError("");
+    setSaveSuccess(false);
+
+    try {
+      const updates = {
+        full_name: formData.full_name,
+        age: formData.age ? parseInt(formData.age) : null,
+        gender: formData.gender || null,
+        phone: formData.phone || null,
+        occupation: formData.occupation || null,
+        current_location: formData.current_location || null,
+        bio: formData.bio || null,
+        languages: formData.languages,
+      };
+
+      await saveProfile(updates);
+      setSaveSuccess(true);
+      setIsEditing(false);
+
+      // Clear success message after 3 seconds
+      setTimeout(() => setSaveSuccess(false), 3000);
+    } catch (err: any) {
+      setSaveError(err.message || "Failed to save profile");
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   const handleCancel = () => {
-    setIsEditing(false)
-    setProfileData(mockUserProfile) // Reset to original data
+    if (profile) {
+      setFormData({
+        full_name: profile.full_name || "",
+        age: profile.age?.toString() || "",
+        gender: profile.gender || "",
+        phone: profile.phone || "",
+        occupation: profile.occupation || "",
+        current_location: profile.current_location || "",
+        bio: profile.bio || "",
+        languages: profile.languages || [],
+      });
+    }
+    setIsEditing(false);
+    setSaveError("");
+  };
+
+  const getUserInitials = (name: string) => {
+    return name
+      .split(" ")
+      .map((word) => word[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Card className="w-[400px]">
+          <CardHeader>
+            <CardTitle>Error</CardTitle>
+            <CardDescription>{error}</CardDescription>
+          </CardHeader>
+        </Card>
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen bg-[#FFFEF7]">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
-      <header className="bg-[#FFFEF7] shadow-sm border-b border-[#ECF0F1] px-6 py-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <Link href="/dashboard" className="flex items-center space-x-2">
-              <ArrowLeft className="w-5 h-5 text-[#7F8C8D]" />
-              <span className="text-[#7F8C8D] hover:text-[#3C2A1E]">Back to Dashboard</span>
+      <header className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center py-4">
+            <Link
+              href="/"
+              className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+            >
+              ← Back to Home
             </Link>
+            <h1 className="text-xl font-semibold">Profile Settings</h1>
+            <div className="w-20"></div> {/* Spacer for centering */}
           </div>
-
-          <Link href="/" className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-[#F6CB5A] to-[#E6B84A] rounded-lg flex items-center justify-center">
-              <Coffee className="w-5 h-5 text-[#3C2A1E]" />
-            </div>
-            <span className="text-xl font-bold text-[#3C2A1E]">DebalE</span>
-          </Link>
         </div>
       </header>
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid lg:grid-cols-4 gap-8">
-          {/* Sidebar */}
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {saveSuccess && (
+          <Alert className="mb-6">
+            <CheckCircle className="h-4 w-4" />
+            <AlertDescription>Profile updated successfully!</AlertDescription>
+          </Alert>
+        )}
+
+        {saveError && (
+          <Alert variant="destructive" className="mb-6">
+            <AlertDescription>{saveError}</AlertDescription>
+          </Alert>
+        )}
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Profile Card */}
           <div className="lg:col-span-1">
-            <Card className="bg-[#FFFEF7] border border-[#ECF0F1] rounded-xl shadow-sm sticky top-8">
-              <CardContent className="p-6">
-                <div className="text-center space-y-4">
-                  <div className="relative">
-                    <div className="w-24 h-24 bg-gradient-to-br from-[#F6CB5A] to-[#E6B84A] rounded-full flex items-center justify-center mx-auto">
-                      <span className="text-2xl font-bold text-[#3C2A1E]">
-                        {profileData.fullName
-                          .split(" ")
-                          .map((n) => n[0])
-                          .join("")}
-                      </span>
-                    </div>
-                    <button className="absolute bottom-0 right-0 bg-[#F6CB5A] hover:bg-[#E6B84A] text-[#3C2A1E] p-2 rounded-full shadow-md transition-all duration-200">
-                      <Camera className="w-4 h-4" />
-                    </button>
+            <Card>
+              <CardHeader className="text-center">
+                <div className="relative mx-auto w-24 h-24 mb-4">
+                  <Avatar className="w-24 h-24">
+                    <AvatarImage
+                      src={
+                        profile?.avatar_url || user?.user_metadata?.avatar_url
+                      }
+                    />
+                    <AvatarFallback className="text-2xl">
+                      {getUserInitials(
+                        profile?.full_name ||
+                          user?.user_metadata?.full_name ||
+                          user?.email ||
+                          "U"
+                      )}
+                    </AvatarFallback>
+                  </Avatar>
+                  {isEditing && (
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      className="absolute -bottom-2 -right-2 rounded-full w-8 h-8 p-0"
+                    >
+                      <Camera className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+                <CardTitle className="text-xl">
+                  {profile?.full_name ||
+                    user?.user_metadata?.full_name ||
+                    "User"}
+                </CardTitle>
+                <CardDescription>
+                  {profile?.user_type === "seeker"
+                    ? "Room Seeker"
+                    : "Room Provider"}
+                </CardDescription>
+                <div className="flex items-center justify-center space-x-2 mt-2">
+                  <Badge variant="secondary">
+                    {profile?.phone_verified ? (
+                      <>
+                        <CheckCircle className="h-3 w-3 mr-1" />
+                        Verified
+                      </>
+                    ) : (
+                      <>
+                        <Shield className="h-3 w-3 mr-1" />
+                        Unverified
+                      </>
+                    )}
+                  </Badge>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="text-sm">
+                    <span className="font-medium text-gray-600 dark:text-gray-400">
+                      Member since:
+                    </span>
+                    <span className="ml-2">
+                      {new Date(
+                        profile?.created_at || Date.now()
+                      ).toLocaleDateString()}
+                    </span>
                   </div>
-
-                  <div>
-                    <h3 className="text-xl font-bold text-[#3C2A1E]">{profileData.fullName}</h3>
-                    <p className="text-[#7F8C8D]">{profileData.occupation}</p>
-                    <div className="flex items-center justify-center space-x-1 mt-2">
-                      <Star className="w-4 h-4 fill-[#F6CB5A] text-[#F6CB5A]" />
-                      <span className="text-sm font-medium text-[#3C2A1E]">{profileData.rating}</span>
-                      <span className="text-sm text-[#7F8C8D]">({profileData.reviewCount} reviews)</span>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-[#7F8C8D]">Profile Complete</span>
-                      <span className="font-bold text-[#F6CB5A]">{profileData.completionPercentage}%</span>
-                    </div>
-                    <div className="w-full bg-[#ECF0F1] rounded-full h-2">
-                      <div
-                        className="bg-gradient-to-r from-[#F6CB5A] to-[#E6B84A] h-2 rounded-full transition-all duration-300"
-                        style={{ width: `${profileData.completionPercentage}%` }}
-                      ></div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <button
-                      onClick={() => setActiveTab("profile")}
-                      className={`w-full p-3 rounded-lg text-left transition-all duration-200 ${
-                        activeTab === "profile"
-                          ? "bg-[#FDF8F0] border-2 border-[#F6CB5A] text-[#3C2A1E]"
-                          : "text-[#7F8C8D] hover:bg-[#FDF8F0]"
-                      }`}
-                    >
-                      <User className="w-4 h-4 inline mr-2" />
-                      Profile Info
-                    </button>
-                    <button
-                      onClick={() => setActiveTab("preferences")}
-                      className={`w-full p-3 rounded-lg text-left transition-all duration-200 ${
-                        activeTab === "preferences"
-                          ? "bg-[#FDF8F0] border-2 border-[#F6CB5A] text-[#3C2A1E]"
-                          : "text-[#7F8C8D] hover:bg-[#FDF8F0]"
-                      }`}
-                    >
-                      <Heart className="w-4 h-4 inline mr-2" />
-                      Preferences
-                    </button>
-                    <button
-                      onClick={() => setActiveTab("verification")}
-                      className={`w-full p-3 rounded-lg text-left transition-all duration-200 ${
-                        activeTab === "verification"
-                          ? "bg-[#FDF8F0] border-2 border-[#F6CB5A] text-[#3C2A1E]"
-                          : "text-[#7F8C8D] hover:bg-[#FDF8F0]"
-                      }`}
-                    >
-                      <Shield className="w-4 h-4 inline mr-2" />
-                      Verification
-                    </button>
-                    <button
-                      onClick={() => setActiveTab("settings")}
-                      className={`w-full p-3 rounded-lg text-left transition-all duration-200 ${
-                        activeTab === "settings"
-                          ? "bg-[#FDF8F0] border-2 border-[#F6CB5A] text-[#3C2A1E]"
-                          : "text-[#7F8C8D] hover:bg-[#FDF8F0]"
-                      }`}
-                    >
-                      <Settings className="w-4 h-4 inline mr-2" />
-                      Settings
-                    </button>
+                  <div className="text-sm">
+                    <span className="font-medium text-gray-600 dark:text-gray-400">
+                      Last active:
+                    </span>
+                    <span className="ml-2">
+                      {new Date(
+                        profile?.last_active || Date.now()
+                      ).toLocaleDateString()}
+                    </span>
                   </div>
                 </div>
               </CardContent>
@@ -202,552 +271,215 @@ export default function ProfilePage() {
           </div>
 
           {/* Main Content */}
-          <div className="lg:col-span-3">
-            {/* Profile Info Tab */}
-            {activeTab === "profile" && (
-              <Card className="bg-[#FFFEF7] border border-[#ECF0F1] rounded-xl shadow-sm">
-                <CardHeader className="pb-4">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-2xl font-bold text-[#3C2A1E]">Profile Information</CardTitle>
-                    {!isEditing ? (
-                      <Button
-                        onClick={() => setIsEditing(true)}
-                        className="bg-[#F6CB5A] hover:bg-[#E6B84A] text-[#3C2A1E] font-semibold py-2 px-4 rounded-lg transition-all duration-200"
-                      >
-                        <Edit className="w-4 h-4 mr-2" />
-                        Edit Profile
-                      </Button>
-                    ) : (
-                      <div className="flex space-x-2">
-                        <Button
-                          onClick={handleCancel}
-                          className="border-2 border-[#ECF0F1] text-[#7F8C8D] hover:bg-[#FDF8F0] py-2 px-4 rounded-lg transition-all duration-200"
-                        >
-                          Cancel
+          <div className="lg:col-span-2">
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="profile">Profile</TabsTrigger>
+                <TabsTrigger value="preferences">Preferences</TabsTrigger>
+                <TabsTrigger value="security">Security</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="profile" className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <CardTitle>Basic Information</CardTitle>
+                        <CardDescription>
+                          Update your personal details
+                        </CardDescription>
+                      </div>
+                      {!isEditing ? (
+                        <Button onClick={() => setIsEditing(true)}>
+                          Edit Profile
                         </Button>
-                        <Button
-                          onClick={handleSave}
-                          className="bg-[#2ECC71] hover:bg-[#27AE60] text-white font-semibold py-2 px-4 rounded-lg transition-all duration-200"
-                        >
-                          Save Changes
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  {/* Basic Information */}
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-bold text-[#3C2A1E] border-b border-[#ECF0F1] pb-2">
-                      Basic Information
-                    </h3>
-                    <div className="grid md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <label className="font-semibold text-[#7F8C8D] text-sm">Full Name</label>
-                        {isEditing ? (
-                          <Input
-                            value={profileData.fullName}
-                            onChange={(e) => setProfileData({ ...profileData, fullName: e.target.value })}
-                            className="bg-[#FFFEF7] border-2 border-[#ECF0F1] focus:border-[#F6CB5A] focus:ring-4 focus:ring-[#F6CB5A]/20 rounded-lg px-4 py-3 text-[#3C2A1E]"
-                          />
-                        ) : (
-                          <p className="text-[#3C2A1E] p-3 bg-[#FDF8F0] rounded-lg">{profileData.fullName}</p>
-                        )}
-                      </div>
-
-                      <div className="space-y-2">
-                        <label className="font-semibold text-[#7F8C8D] text-sm">Age</label>
-                        {isEditing ? (
-                          <Input
-                            type="number"
-                            value={profileData.age}
-                            onChange={(e) => setProfileData({ ...profileData, age: Number.parseInt(e.target.value) })}
-                            className="bg-[#FFFEF7] border-2 border-[#ECF0F1] focus:border-[#F6CB5A] focus:ring-4 focus:ring-[#F6CB5A]/20 rounded-lg px-4 py-3 text-[#3C2A1E]"
-                          />
-                        ) : (
-                          <p className="text-[#3C2A1E] p-3 bg-[#FDF8F0] rounded-lg">{profileData.age} years old</p>
-                        )}
-                      </div>
-
-                      <div className="space-y-2">
-                        <label className="font-semibold text-[#7F8C8D] text-sm">Email</label>
-                        <div className="flex items-center space-x-2">
-                          <p className="text-[#3C2A1E] p-3 bg-[#FDF8F0] rounded-lg flex-1">{profileData.email}</p>
-                          {profileData.verification.email && <CheckCircle className="w-5 h-5 text-[#2ECC71]" />}
-                        </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <label className="font-semibold text-[#7F8C8D] text-sm">Phone</label>
-                        <div className="flex items-center space-x-2">
-                          {isEditing ? (
-                            <Input
-                              value={profileData.phone}
-                              onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })}
-                              className="bg-[#FFFEF7] border-2 border-[#ECF0F1] focus:border-[#F6CB5A] focus:ring-4 focus:ring-[#F6CB5A]/20 rounded-lg px-4 py-3 text-[#3C2A1E] flex-1"
-                            />
-                          ) : (
-                            <p className="text-[#3C2A1E] p-3 bg-[#FDF8F0] rounded-lg flex-1">{profileData.phone}</p>
-                          )}
-                          {profileData.verification.phone && <CheckCircle className="w-5 h-5 text-[#2ECC71]" />}
-                        </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <label className="font-semibold text-[#7F8C8D] text-sm">Occupation</label>
-                        {isEditing ? (
-                          <select
-                            value={profileData.occupation}
-                            onChange={(e) => setProfileData({ ...profileData, occupation: e.target.value })}
-                            className="w-full bg-[#FFFEF7] border-2 border-[#ECF0F1] focus:border-[#F6CB5A] focus:ring-4 focus:ring-[#F6CB5A]/20 rounded-lg px-4 py-3 text-[#3C2A1E]"
-                          >
-                            <option value="Student">Student</option>
-                            <option value="Professional">Working Professional</option>
-                            <option value="Freelancer">Freelancer</option>
-                            <option value="Entrepreneur">Entrepreneur</option>
-                          </select>
-                        ) : (
-                          <p className="text-[#3C2A1E] p-3 bg-[#FDF8F0] rounded-lg">{profileData.occupation}</p>
-                        )}
-                      </div>
-
-                      {profileData.occupation === "Student" && (
-                        <div className="space-y-2">
-                          <label className="font-semibold text-[#7F8C8D] text-sm">University</label>
-                          {isEditing ? (
-                            <Input
-                              value={profileData.university}
-                              onChange={(e) => setProfileData({ ...profileData, university: e.target.value })}
-                              className="bg-[#FFFEF7] border-2 border-[#ECF0F1] focus:border-[#F6CB5A] focus:ring-4 focus:ring-[#F6CB5A]/20 rounded-lg px-4 py-3 text-[#3C2A1E]"
-                            />
-                          ) : (
-                            <p className="text-[#3C2A1E] p-3 bg-[#FDF8F0] rounded-lg">{profileData.university}</p>
-                          )}
+                      ) : (
+                        <div className="flex space-x-2">
+                          <Button variant="outline" onClick={handleCancel}>
+                            <X className="h-4 w-4 mr-2" />
+                            Cancel
+                          </Button>
+                          <Button onClick={handleSave} disabled={isSaving}>
+                            {isSaving ? (
+                              <>
+                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                Saving...
+                              </>
+                            ) : (
+                              <>
+                                <Save className="h-4 w-4 mr-2" />
+                                Save
+                              </>
+                            )}
+                          </Button>
                         </div>
                       )}
                     </div>
-                  </div>
-
-                  {/* Location & Languages */}
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-bold text-[#3C2A1E] border-b border-[#ECF0F1] pb-2">
-                      Location & Languages
-                    </h3>
-                    <div className="grid md:grid-cols-2 gap-4">
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <label className="font-semibold text-[#7F8C8D] text-sm">Current Location</label>
-                        {isEditing ? (
-                          <Input
-                            value={profileData.currentLocation}
-                            onChange={(e) => setProfileData({ ...profileData, currentLocation: e.target.value })}
-                            className="bg-[#FFFEF7] border-2 border-[#ECF0F1] focus:border-[#F6CB5A] focus:ring-4 focus:ring-[#F6CB5A]/20 rounded-lg px-4 py-3 text-[#3C2A1E]"
-                          />
-                        ) : (
-                          <p className="text-[#3C2A1E] p-3 bg-[#FDF8F0] rounded-lg flex items-center">
-                            <MapPin className="w-4 h-4 mr-2" />
-                            {profileData.currentLocation}
-                          </p>
-                        )}
+                        <Label htmlFor="full_name">Full Name *</Label>
+                        <Input
+                          id="full_name"
+                          value={formData.full_name}
+                          onChange={(e) =>
+                            handleInputChange("full_name", e.target.value)
+                          }
+                          disabled={!isEditing}
+                        />
                       </div>
 
                       <div className="space-y-2">
-                        <label className="font-semibold text-[#7F8C8D] text-sm">Languages</label>
-                        <div className="flex flex-wrap gap-2">
-                          {profileData.languages.map((lang, index) => (
-                            <Badge key={index} className="bg-[#F6CB5A] text-[#3C2A1E] px-3 py-1 rounded-full text-sm">
-                              {lang}
-                            </Badge>
-                          ))}
-                        </div>
+                        <Label htmlFor="age">Age</Label>
+                        <Input
+                          id="age"
+                          type="number"
+                          value={formData.age}
+                          onChange={(e) =>
+                            handleInputChange("age", e.target.value)
+                          }
+                          disabled={!isEditing}
+                        />
                       </div>
                     </div>
-                  </div>
 
-                  {/* About */}
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-bold text-[#3C2A1E] border-b border-[#ECF0F1] pb-2">About Me</h3>
-                    {isEditing ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="gender">Gender</Label>
+                        <Select
+                          value={formData.gender}
+                          onValueChange={(value) =>
+                            handleInputChange("gender", value)
+                          }
+                          disabled={!isEditing}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select gender" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="male">Male</SelectItem>
+                            <SelectItem value="female">Female</SelectItem>
+                            <SelectItem value="any">Any</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="phone">Phone Number</Label>
+                        <Input
+                          id="phone"
+                          type="tel"
+                          value={formData.phone}
+                          onChange={(e) =>
+                            handleInputChange("phone", e.target.value)
+                          }
+                          disabled={!isEditing}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="occupation">Occupation</Label>
+                      <Input
+                        id="occupation"
+                        value={formData.occupation}
+                        onChange={(e) =>
+                          handleInputChange("occupation", e.target.value)
+                        }
+                        disabled={!isEditing}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="current_location">Current Location</Label>
+                      <Input
+                        id="current_location"
+                        value={formData.current_location}
+                        onChange={(e) =>
+                          handleInputChange("current_location", e.target.value)
+                        }
+                        disabled={!isEditing}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="bio">About Me</Label>
                       <Textarea
-                        value={profileData.bio}
-                        onChange={(e) => setProfileData({ ...profileData, bio: e.target.value })}
-                        className="bg-[#FFFEF7] border-2 border-[#ECF0F1] focus:border-[#F6CB5A] focus:ring-4 focus:ring-[#F6CB5A]/20 rounded-lg px-4 py-3 text-[#3C2A1E] min-h-[120px]"
+                        id="bio"
+                        value={formData.bio}
+                        onChange={(e) =>
+                          handleInputChange("bio", e.target.value)
+                        }
+                        disabled={!isEditing}
+                        rows={4}
                         placeholder="Tell potential roommates about yourself..."
                       />
-                    ) : (
-                      <p className="text-[#3C2A1E] p-4 bg-[#FDF8F0] rounded-lg leading-relaxed">{profileData.bio}</p>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Preferences Tab */}
-            {activeTab === "preferences" && (
-              <Card className="bg-[#FFFEF7] border border-[#ECF0F1] rounded-xl shadow-sm">
-                <CardHeader>
-                  <CardTitle className="text-2xl font-bold text-[#3C2A1E]">Housing Preferences</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="grid md:grid-cols-2 gap-6">
-                    <div className="space-y-4">
-                      <h3 className="text-lg font-bold text-[#3C2A1E]">Budget & Location</h3>
-                      <div className="space-y-3">
-                        <div className="p-4 bg-[#FDF8F0] rounded-lg">
-                          <div className="text-sm text-[#7F8C8D] mb-1">Budget Range</div>
-                          <div className="text-[#3C2A1E] font-semibold">
-                            {profileData.budget.min} - {profileData.budget.max} Birr/month
-                          </div>
-                        </div>
-                        <div className="p-4 bg-[#FDF8F0] rounded-lg">
-                          <div className="text-sm text-[#7F8C8D] mb-2">Preferred Areas</div>
-                          <div className="flex flex-wrap gap-2">
-                            {profileData.preferredAreas.map((area, index) => (
-                              <Badge key={index} className="bg-[#F6CB5A] text-[#3C2A1E] px-2 py-1 rounded-full text-xs">
-                                {area}
-                              </Badge>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
                     </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
 
-                    <div className="space-y-4">
-                      <h3 className="text-lg font-bold text-[#3C2A1E]">Room Preferences</h3>
-                      <div className="space-y-3">
-                        <div className="p-4 bg-[#FDF8F0] rounded-lg">
-                          <div className="text-sm text-[#7F8C8D] mb-1">Room Type</div>
-                          <div className="text-[#3C2A1E] font-semibold capitalize">
-                            {profileData.preferences.roomType} Room
-                          </div>
-                        </div>
-                        <div className="p-4 bg-[#FDF8F0] rounded-lg">
-                          <div className="text-sm text-[#7F8C8D] mb-1">Gender Preference</div>
-                          <div className="text-[#3C2A1E] font-semibold capitalize">
-                            {profileData.preferences.genderPreference.replace("-", " ")}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+              <TabsContent value="preferences" className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Preferences</CardTitle>
+                    <CardDescription>
+                      Manage your housing preferences
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-gray-600 dark:text-gray-400">
+                      Preference settings will be available soon.
+                    </p>
+                  </CardContent>
+                </Card>
+              </TabsContent>
 
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-bold text-[#3C2A1E]">Lifestyle</h3>
-                    <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-                      <div className="p-4 bg-[#FDF8F0] rounded-lg text-center">
-                        <div className="text-sm text-[#7F8C8D] mb-1">Smoking</div>
-                        <div className="text-[#3C2A1E] font-semibold capitalize">
-                          {profileData.lifestyle.smoking.replace("-", " ")}
-                        </div>
-                      </div>
-                      <div className="p-4 bg-[#FDF8F0] rounded-lg text-center">
-                        <div className="text-sm text-[#7F8C8D] mb-1">Pets</div>
-                        <div className="text-[#3C2A1E] font-semibold capitalize">
-                          {profileData.lifestyle.pets.replace("-", " ")}
-                        </div>
-                      </div>
-                      <div className="p-4 bg-[#FDF8F0] rounded-lg text-center">
-                        <div className="text-sm text-[#7F8C8D] mb-1">Cleanliness</div>
-                        <div className="text-[#3C2A1E] font-semibold capitalize">
-                          {profileData.lifestyle.cleanliness.replace("-", " ")}
-                        </div>
-                      </div>
-                      <div className="p-4 bg-[#FDF8F0] rounded-lg text-center">
-                        <div className="text-sm text-[#7F8C8D] mb-1">Social Level</div>
-                        <div className="text-[#3C2A1E] font-semibold capitalize">
-                          {profileData.lifestyle.socialLevel.replace("-", " ")}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="pt-4">
-                    <Button className="bg-[#F6CB5A] hover:bg-[#E6B84A] text-[#3C2A1E] font-semibold py-2 px-6 rounded-lg transition-all duration-200">
-                      <Edit className="w-4 h-4 mr-2" />
-                      Update Preferences
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Verification Tab */}
-            {activeTab === "verification" && (
-              <Card className="bg-[#FFFEF7] border border-[#ECF0F1] rounded-xl shadow-sm">
-                <CardHeader>
-                  <CardTitle className="text-2xl font-bold text-[#3C2A1E]">Account Verification</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="bg-[#E3F2FD] border border-[#2196F3] rounded-lg p-4">
-                    <div className="flex items-start space-x-3">
-                      <Shield className="w-6 h-6 text-[#2196F3] flex-shrink-0 mt-0.5" />
+              <TabsContent value="security" className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Security</CardTitle>
+                    <CardDescription>
+                      Manage your account security
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="flex items-center justify-between p-4 border rounded-lg">
                       <div>
-                        <h4 className="font-semibold text-[#1976D2] mb-1">Why Verify Your Account?</h4>
-                        <p className="text-sm text-[#1976D2]">
-                          Verification builds trust in our community and helps you get better matches. Verified users
-                          are 3x more likely to find compatible roommates.
+                        <h3 className="font-medium">Password</h3>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          Update your password to keep your account secure
                         </p>
                       </div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between p-4 bg-[#FDF8F0] rounded-lg">
-                      <div className="flex items-center space-x-3">
-                        <Phone className="w-5 h-5 text-[#F6CB5A]" />
-                        <div>
-                          <div className="font-semibold text-[#3C2A1E]">Phone Number</div>
-                          <div className="text-sm text-[#7F8C8D]">Verify your phone number via SMS</div>
-                        </div>
-                      </div>
-                      {profileData.verification.phone ? (
-                        <div className="flex items-center space-x-2">
-                          <CheckCircle className="w-5 h-5 text-[#2ECC71]" />
-                          <span className="text-sm font-medium text-[#2ECC71]">Verified</span>
-                        </div>
-                      ) : (
-                        <Button className="bg-[#F6CB5A] hover:bg-[#E6B84A] text-[#3C2A1E] text-sm py-2 px-4 rounded-lg">
-                          Verify
-                        </Button>
-                      )}
+                      <Link href="/forgot-password">
+                        <Button variant="outline">Change Password</Button>
+                      </Link>
                     </div>
 
-                    <div className="flex items-center justify-between p-4 bg-[#FDF8F0] rounded-lg">
-                      <div className="flex items-center space-x-3">
-                        <Mail className="w-5 h-5 text-[#F6CB5A]" />
-                        <div>
-                          <div className="font-semibold text-[#3C2A1E]">Email Address</div>
-                          <div className="text-sm text-[#7F8C8D]">Confirm your email address</div>
-                        </div>
+                    <div className="flex items-center justify-between p-4 border rounded-lg">
+                      <div>
+                        <h3 className="font-medium">Phone Verification</h3>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          {profile?.phone_verified
+                            ? "Your phone number is verified"
+                            : "Verify your phone number for added security"}
+                        </p>
                       </div>
-                      {profileData.verification.email ? (
-                        <div className="flex items-center space-x-2">
-                          <CheckCircle className="w-5 h-5 text-[#2ECC71]" />
-                          <span className="text-sm font-medium text-[#2ECC71]">Verified</span>
-                        </div>
-                      ) : (
-                        <Button className="bg-[#F6CB5A] hover:bg-[#E6B84A] text-[#3C2A1E] text-sm py-2 px-4 rounded-lg">
-                          Verify
-                        </Button>
-                      )}
+                      <Button
+                        variant="outline"
+                        disabled={profile?.phone_verified}
+                      >
+                        {profile?.phone_verified ? "Verified" : "Verify Phone"}
+                      </Button>
                     </div>
-
-                    <div className="flex items-center justify-between p-4 bg-[#FDF8F0] rounded-lg">
-                      <div className="flex items-center space-x-3">
-                        <User className="w-5 h-5 text-[#F6CB5A]" />
-                        <div>
-                          <div className="font-semibold text-[#3C2A1E]">Student ID</div>
-                          <div className="text-sm text-[#7F8C8D]">Upload your student ID for verification</div>
-                        </div>
-                      </div>
-                      {profileData.verification.studentId ? (
-                        <div className="flex items-center space-x-2">
-                          <CheckCircle className="w-5 h-5 text-[#2ECC71]" />
-                          <span className="text-sm font-medium text-[#2ECC71]">Verified</span>
-                        </div>
-                      ) : (
-                        <Button className="bg-[#F6CB5A] hover:bg-[#E6B84A] text-[#3C2A1E] text-sm py-2 px-4 rounded-lg">
-                          Upload
-                        </Button>
-                      )}
-                    </div>
-
-                    <div className="flex items-center justify-between p-4 bg-[#FDF8F0] rounded-lg">
-                      <div className="flex items-center space-x-3">
-                        <Shield className="w-5 h-5 text-[#F6CB5A]" />
-                        <div>
-                          <div className="font-semibold text-[#3C2A1E]">National ID</div>
-                          <div className="text-sm text-[#7F8C8D]">Upload your national ID for full verification</div>
-                        </div>
-                      </div>
-                      {profileData.verification.nationalId ? (
-                        <div className="flex items-center space-x-2">
-                          <CheckCircle className="w-5 h-5 text-[#2ECC71]" />
-                          <span className="text-sm font-medium text-[#2ECC71]">Verified</span>
-                        </div>
-                      ) : (
-                        <Button className="bg-[#F6CB5A] hover:bg-[#E6B84A] text-[#3C2A1E] text-sm py-2 px-4 rounded-lg">
-                          Upload
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="bg-[#FDF8F0] border border-[#F6CB5A] rounded-lg p-4">
-                    <h4 className="font-semibold text-[#3C2A1E] mb-2">Verification Benefits</h4>
-                    <ul className="space-y-1 text-sm text-[#3C2A1E]">
-                      <li>• Higher visibility in search results</li>
-                      <li>• Access to verified-only listings</li>
-                      <li>• Increased trust from other users</li>
-                      <li>• Priority customer support</li>
-                    </ul>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Settings Tab */}
-            {activeTab === "settings" && (
-              <Card className="bg-[#FFFEF7] border border-[#ECF0F1] rounded-xl shadow-sm">
-                <CardHeader>
-                  <CardTitle className="text-2xl font-bold text-[#3C2A1E]">Account Settings</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  {/* Privacy Settings */}
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-bold text-[#3C2A1E] border-b border-[#ECF0F1] pb-2">
-                      Privacy Settings
-                    </h3>
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between p-4 bg-[#FDF8F0] rounded-lg">
-                        <div>
-                          <div className="font-semibold text-[#3C2A1E]">Profile Visibility</div>
-                          <div className="text-sm text-[#7F8C8D]">Who can see your profile</div>
-                        </div>
-                        <select className="bg-[#FFFEF7] border border-[#ECF0F1] rounded-lg px-3 py-2 text-[#3C2A1E]">
-                          <option>Everyone</option>
-                          <option>Verified users only</option>
-                          <option>Private</option>
-                        </select>
-                      </div>
-
-                      <div className="flex items-center justify-between p-4 bg-[#FDF8F0] rounded-lg">
-                        <div>
-                          <div className="font-semibold text-[#3C2A1E]">Show Online Status</div>
-                          <div className="text-sm text-[#7F8C8D]">Let others see when you're online</div>
-                        </div>
-                        <button className="w-12 h-6 bg-[#F6CB5A] rounded-full relative">
-                          <div className="w-5 h-5 bg-white rounded-full absolute right-0.5 top-0.5 transition-all duration-200"></div>
-                        </button>
-                      </div>
-
-                      <div className="flex items-center justify-between p-4 bg-[#FDF8F0] rounded-lg">
-                        <div>
-                          <div className="font-semibold text-[#3C2A1E]">Contact Information</div>
-                          <div className="text-sm text-[#7F8C8D]">Show phone number to matched users</div>
-                        </div>
-                        <button className="w-12 h-6 bg-[#ECF0F1] rounded-full relative">
-                          <div className="w-5 h-5 bg-white rounded-full absolute left-0.5 top-0.5 transition-all duration-200"></div>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Notification Settings */}
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-bold text-[#3C2A1E] border-b border-[#ECF0F1] pb-2">
-                      Notification Settings
-                    </h3>
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between p-4 bg-[#FDF8F0] rounded-lg">
-                        <div className="flex items-center space-x-3">
-                          <Bell className="w-5 h-5 text-[#F6CB5A]" />
-                          <div>
-                            <div className="font-semibold text-[#3C2A1E]">New Messages</div>
-                            <div className="text-sm text-[#7F8C8D]">Get notified of new messages</div>
-                          </div>
-                        </div>
-                        <button className="w-12 h-6 bg-[#F6CB5A] rounded-full relative">
-                          <div className="w-5 h-5 bg-white rounded-full absolute right-0.5 top-0.5 transition-all duration-200"></div>
-                        </button>
-                      </div>
-
-                      <div className="flex items-center justify-between p-4 bg-[#FDF8F0] rounded-lg">
-                        <div className="flex items-center space-x-3">
-                          <Heart className="w-5 h-5 text-[#F6CB5A]" />
-                          <div>
-                            <div className="font-semibold text-[#3C2A1E]">New Matches</div>
-                            <div className="text-sm text-[#7F8C8D]">Get notified of potential matches</div>
-                          </div>
-                        </div>
-                        <button className="w-12 h-6 bg-[#F6CB5A] rounded-full relative">
-                          <div className="w-5 h-5 bg-white rounded-full absolute right-0.5 top-0.5 transition-all duration-200"></div>
-                        </button>
-                      </div>
-
-                      <div className="flex items-center justify-between p-4 bg-[#FDF8F0] rounded-lg">
-                        <div className="flex items-center space-x-3">
-                          <Mail className="w-5 h-5 text-[#F6CB5A]" />
-                          <div>
-                            <div className="font-semibold text-[#3C2A1E]">Email Updates</div>
-                            <div className="text-sm text-[#7F8C8D]">Receive weekly email updates</div>
-                          </div>
-                        </div>
-                        <button className="w-12 h-6 bg-[#ECF0F1] rounded-full relative">
-                          <div className="w-5 h-5 bg-white rounded-full absolute left-0.5 top-0.5 transition-all duration-200"></div>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Security Settings */}
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-bold text-[#3C2A1E] border-b border-[#ECF0F1] pb-2">
-                      Security Settings
-                    </h3>
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between p-4 bg-[#FDF8F0] rounded-lg">
-                        <div className="flex items-center space-x-3">
-                          <Lock className="w-5 h-5 text-[#F6CB5A]" />
-                          <div>
-                            <div className="font-semibold text-[#3C2A1E]">Change Password</div>
-                            <div className="text-sm text-[#7F8C8D]">Update your account password</div>
-                          </div>
-                        </div>
-                        <Button className="bg-[#F6CB5A] hover:bg-[#E6B84A] text-[#3C2A1E] text-sm py-2 px-4 rounded-lg">
-                          Change
-                        </Button>
-                      </div>
-
-                      <div className="flex items-center justify-between p-4 bg-[#FDF8F0] rounded-lg">
-                        <div className="flex items-center space-x-3">
-                          <Shield className="w-5 h-5 text-[#F6CB5A]" />
-                          <div>
-                            <div className="font-semibold text-[#3C2A1E]">Two-Factor Authentication</div>
-                            <div className="text-sm text-[#7F8C8D]">Add extra security to your account</div>
-                          </div>
-                        </div>
-                        <Button className="border-2 border-[#F6CB5A] text-[#F6CB5A] hover:bg-[#F6CB5A] hover:text-[#3C2A1E] text-sm py-2 px-4 rounded-lg">
-                          Enable
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Danger Zone */}
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-bold text-[#E74C3C] border-b border-[#ECF0F1] pb-2">Danger Zone</h3>
-                    <div className="space-y-3">
-                      <div className="p-4 bg-[#FDEDEC] border border-[#E74C3C] rounded-lg">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <div className="font-semibold text-[#E74C3C]">Deactivate Account</div>
-                            <div className="text-sm text-[#C0392B]">Temporarily disable your account</div>
-                          </div>
-                          <Button className="bg-[#E74C3C] hover:bg-[#C0392B] text-white text-sm py-2 px-4 rounded-lg">
-                            Deactivate
-                          </Button>
-                        </div>
-                      </div>
-
-                      <div className="p-4 bg-[#FDEDEC] border border-[#E74C3C] rounded-lg">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <div className="font-semibold text-[#E74C3C]">Delete Account</div>
-                            <div className="text-sm text-[#C0392B]">Permanently delete your account and data</div>
-                          </div>
-                          <Button className="bg-[#E74C3C] hover:bg-[#C0392B] text-white text-sm py-2 px-4 rounded-lg">
-                            Delete
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
           </div>
         </div>
       </div>
     </div>
-  )
+  );
 }

@@ -154,10 +154,10 @@ export default function MessagesPage() {
       <header className="bg-[#FFFEF7] shadow-sm border-b border-[#ECF0F1] px-6 py-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            <Link href="/dashboard" className="flex items-center space-x-2">
+            <Link href="/" className="flex items-center space-x-2">
               <ArrowLeft className="w-5 h-5 text-[#7F8C8D]" />
               <span className="text-[#7F8C8D] hover:text-[#3C2A1E]">
-                Back to Dashboard
+                Back to Home
               </span>
             </Link>
           </div>

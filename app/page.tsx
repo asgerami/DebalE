@@ -1,3 +1,5 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -17,8 +19,11 @@ import {
 import Link from "next/link";
 import Image from "next/image";
 import MobileNav from "@/components/mobile-nav";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function LandingPage() {
+  const { user } = useAuth();
+
   return (
     <div className="min-h-screen bg-[#FFFEF7]">
       {/* Header */}
@@ -50,17 +55,30 @@ export default function LandingPage() {
             >
               How It Works
             </Link>
-            <Link
-              href="/login"
-              className="text-[#7F8C8D] hover:bg-[#FDF8F0] py-2 px-4 rounded-md transition-colors duration-200"
-            >
-              Sign In
-            </Link>
-            <Link href="/register">
-              <Button className="bg-[#F6CB5A] hover:bg-[#E6B84A] text-[#3C2A1E] font-semibold py-3 px-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-200">
-                Get Started
-              </Button>
-            </Link>
+            {user ? (
+              <>
+                <Link
+                  href="/profile"
+                  className="text-[#7F8C8D] hover:bg-[#FDF8F0] py-2 px-4 rounded-md transition-colors duration-200"
+                >
+                  Profile
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link
+                  href="/login"
+                  className="text-[#7F8C8D] hover:bg-[#FDF8F0] py-2 px-4 rounded-md transition-colors duration-200"
+                >
+                  Sign In
+                </Link>
+                <Link href="/register">
+                  <Button className="bg-[#F6CB5A] hover:bg-[#E6B84A] text-[#3C2A1E] font-semibold py-3 px-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-200">
+                    Get Started
+                  </Button>
+                </Link>
+              </>
+            )}
           </nav>
 
           <MobileNav />
@@ -139,6 +157,57 @@ export default function LandingPage() {
                     <span className="text-sm font-medium text-[#3C2A1E]">
                       2,341 rooms available
                     </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Call to Action Buttons */}
+      <section className="py-16 bg-[#FFFEF7]">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid md:grid-cols-2 gap-8">
+            {/* Need a roommate? */}
+            <div className="bg-white rounded-2xl p-8 shadow-lg border border-[#ECF0F1] hover:shadow-xl transition-shadow duration-300">
+              <div className="flex items-center justify-between">
+                <div className="space-y-4">
+                  <h3 className="text-2xl font-bold text-[#3C2A1E]">
+                    Need a roommate?
+                  </h3>
+                  <Link href="/list-room">
+                    <Button className="bg-[#20B2AA] hover:bg-[#1A9A94] text-white font-semibold py-4 px-8 rounded-xl shadow-md hover:shadow-lg transition-all duration-200">
+                      List your room
+                      <ArrowRight className="ml-2 w-5 h-5" />
+                    </Button>
+                  </Link>
+                </div>
+                <div className="hidden md:block">
+                  <div className="w-24 h-24 bg-[#20B2AA] rounded-full flex items-center justify-center">
+                    <Users className="w-12 h-12 text-white" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Looking for a place? */}
+            <div className="bg-white rounded-2xl p-8 shadow-lg border border-[#ECF0F1] hover:shadow-xl transition-shadow duration-300">
+              <div className="flex items-center justify-between">
+                <div className="space-y-4">
+                  <h3 className="text-2xl font-bold text-[#3C2A1E]">
+                    Looking for a place?
+                  </h3>
+                  <Link href="/register">
+                    <Button className="bg-[#FF7F50] hover:bg-[#E66B47] text-white font-semibold py-4 px-8 rounded-xl shadow-md hover:shadow-lg transition-all duration-200">
+                      Create your profile
+                      <ArrowRight className="ml-2 w-5 h-5" />
+                    </Button>
+                  </Link>
+                </div>
+                <div className="hidden md:block">
+                  <div className="w-24 h-24 bg-[#FF7F50] rounded-full flex items-center justify-center">
+                    <Home className="w-12 h-12 text-white" />
                   </div>
                 </div>
               </div>
@@ -355,116 +424,6 @@ export default function LandingPage() {
                   Read reviews from previous roommates and landlords to make
                   informed decisions.
                 </p>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </section>
-
-      {/* Testimonials */}
-      <section className="py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-[#3C2A1E] mb-4">
-              What Our Users Say
-            </h2>
-            <p className="text-xl text-[#7F8C8D]">
-              Real stories from the DebalE community
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            <Card className="bg-gradient-to-br from-[#FDF8F0] to-[#FFFEF7] border-2 border-[#F6CB5A] rounded-xl p-6 shadow-md relative before:absolute before:left-0 before:top-0 before:bottom-0 before:w-1 before:bg-[#F6CB5A] before:rounded-l-xl">
-              <CardContent className="p-0 space-y-4">
-                <div className="flex items-center space-x-1">
-                  {[...Array(5)].map((_, i) => (
-                    <Star
-                      key={i}
-                      className="w-4 h-4 fill-[#F6CB5A] text-[#F6CB5A]"
-                    />
-                  ))}
-                </div>
-                <p className="text-[#3C2A1E] italic">
-                  "DebalE helped me find the perfect roommate for my studies at
-                  AAU. The cultural matching feature is amazing!"
-                </p>
-                <div className="flex items-center space-x-3">
-                  <Image
-                    src="https://images.unsplash.com/photo-1494790108755-2616b612b786?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=687&q=80"
-                    alt="Sara M."
-                    width={40}
-                    height={40}
-                    className="rounded-full object-cover"
-                  />
-                  <div>
-                    <div className="font-semibold text-[#3C2A1E]">Sara M.</div>
-                    <div className="text-sm text-[#7F8C8D]">AAU Student</div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-[#FFFEF7] border border-[#ECF0F1] rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow duration-200">
-              <CardContent className="p-0 space-y-4">
-                <div className="flex items-center space-x-1">
-                  {[...Array(5)].map((_, i) => (
-                    <Star
-                      key={i}
-                      className="w-4 h-4 fill-[#F6CB5A] text-[#F6CB5A]"
-                    />
-                  ))}
-                </div>
-                <p className="text-[#3C2A1E] italic">
-                  "As a young professional new to Addis, DebalE made finding
-                  affordable housing so much easier and safer."
-                </p>
-                <div className="flex items-center space-x-3">
-                  <Image
-                    src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=687&q=80"
-                    alt="Daniel K."
-                    width={40}
-                    height={40}
-                    className="rounded-full object-cover"
-                  />
-                  <div>
-                    <div className="font-semibold text-[#3C2A1E]">
-                      Daniel K.
-                    </div>
-                    <div className="text-sm text-[#7F8C8D]">
-                      Software Developer
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-[#FFFEF7] border border-[#ECF0F1] rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow duration-200">
-              <CardContent className="p-0 space-y-4">
-                <div className="flex items-center space-x-1">
-                  {[...Array(5)].map((_, i) => (
-                    <Star
-                      key={i}
-                      className="w-4 h-4 fill-[#F6CB5A] text-[#F6CB5A]"
-                    />
-                  ))}
-                </div>
-                <p className="text-[#3C2A1E] italic">
-                  "I found great tenants for my extra rooms through DebalE. The
-                  verification system gives me peace of mind."
-                </p>
-                <div className="flex items-center space-x-3">
-                  <Image
-                    src="https://images.unsplash.com/photo-1580489944761-15a19d654956?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=761&q=80"
-                    alt="Meron A."
-                    width={40}
-                    height={40}
-                    className="rounded-full object-cover"
-                  />
-                  <div>
-                    <div className="font-semibold text-[#3C2A1E]">Meron A.</div>
-                    <div className="text-sm text-[#7F8C8D]">Room Provider</div>
-                  </div>
-                </div>
               </CardContent>
             </Card>
           </div>
