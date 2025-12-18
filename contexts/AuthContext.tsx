@@ -20,7 +20,12 @@ interface AuthContextType extends AuthState {
     email: string,
     password: string,
     full_name: string,
-    user_type: "seeker" | "provider"
+    user_type: "seeker" | "provider",
+    phone?: string,
+    occupation?: string,
+    current_location?: string,
+    age?: string,
+    gender?: string
   ) => Promise<void>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
@@ -73,10 +78,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     email: string,
     password: string,
     full_name: string,
-    user_type: "seeker" | "provider"
+    user_type: "seeker" | "provider",
+    phone?: string,
+    occupation?: string,
+    current_location?: string,
+    age?: string,
+    gender?: string
   ) => {
     try {
-      await signUp({ email, password, full_name, user_type });
+      await signUp({
+        email,
+        password,
+        full_name,
+        user_type,
+        phone,
+        occupation,
+        current_location,
+        age,
+        gender
+      });
     } catch (error) {
       throw error;
     }

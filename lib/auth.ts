@@ -12,6 +12,11 @@ export interface SignUpData {
   password: string
   full_name: string
   user_type: 'seeker' | 'provider'
+  phone?: string
+  occupation?: string
+  current_location?: string
+  age?: string
+  gender?: string
 }
 
 export interface SignInData {
@@ -25,8 +30,18 @@ export interface PasswordResetData {
 
 // Sign up with email and password
 export async function signUp(data: SignUpData) {
-  const { email, password, full_name, user_type } = data
-  
+  const {
+    email,
+    password,
+    full_name,
+    user_type,
+    phone,
+    occupation,
+    current_location,
+    age,
+    gender
+  } = data
+
   const { data: authData, error } = await supabase.auth.signUp({
     email,
     password,
@@ -34,6 +49,11 @@ export async function signUp(data: SignUpData) {
       data: {
         full_name,
         user_type,
+        phone,
+        occupation,
+        current_location,
+        age,
+        gender
       },
       emailRedirectTo: `${window.location.origin}/auth/callback`
     }
@@ -46,7 +66,7 @@ export async function signUp(data: SignUpData) {
 // Sign in with email and password
 export async function signIn(data: SignInData) {
   const { email, password } = data
-  
+
   const { data: authData, error } = await supabase.auth.signInWithPassword({
     email,
     password,
@@ -65,7 +85,7 @@ export async function signOut() {
 // Send password reset email
 export async function resetPassword(data: PasswordResetData) {
   const { email } = data
-  
+
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
     redirectTo: `${window.location.origin}/reset-password`,
   })
