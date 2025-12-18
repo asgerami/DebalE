@@ -17,12 +17,24 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
+import { useAuth } from "@/contexts/AuthContext";
+
 interface MobileNavProps {
   isAuthenticated?: boolean;
 }
 
 export default function MobileNav({ isAuthenticated = false }: MobileNavProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const { signOut } = useAuth();
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      setIsOpen(false);
+    } catch (error) {
+      console.error("Error signing out:", error);
+    }
+  };
 
   const menuItems = [
     { href: "/search", label: "Find Rooms", icon: Search },
@@ -90,6 +102,7 @@ export default function MobileNav({ isAuthenticated = false }: MobileNavProps) {
                 <div className="border-t border-[#ECF0F1] pt-4">
                   <Button
                     variant="ghost"
+                    onClick={handleSignOut}
                     className="w-full justify-start p-3 text-[#E74C3C] hover:bg-[#E74C3C]/10"
                   >
                     <LogOut className="w-5 h-5 mr-3" />

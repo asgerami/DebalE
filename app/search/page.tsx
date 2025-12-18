@@ -11,16 +11,15 @@ import {
   Filter,
   Heart,
   Star,
-  Coffee,
   Wifi,
   Car,
   Shield,
   Users,
   BedDouble,
-  ArrowLeft,
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
+import Header from "@/components/header";
 
 const mockListings = [
   {
@@ -128,35 +127,7 @@ export default function SearchPage() {
 
   return (
     <div className="min-h-screen bg-[#FFFEF7]">
-      {/* Header */}
-      <header className="bg-[#FFFEF7] shadow-sm border-b border-[#ECF0F1] px-6 py-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <Link href="/" className="flex items-center space-x-2">
-              <ArrowLeft className="w-5 h-5 text-[#7F8C8D]" />
-              <div className="w-8 h-8 bg-gradient-to-br from-[#F6CB5A] to-[#E6B84A] rounded-lg flex items-center justify-center">
-                <Coffee className="w-5 h-5 text-[#3C2A1E]" />
-              </div>
-              <span className="text-xl font-bold text-[#3C2A1E]">DebalE</span>
-            </Link>
-          </div>
-
-          <div className="flex items-center space-x-4">
-            <Link
-              href="/dashboard"
-              className="text-[#7F8C8D] hover:text-[#3C2A1E] font-medium"
-            >
-              Dashboard
-            </Link>
-            <Link
-              href="/messages"
-              className="text-[#7F8C8D] hover:text-[#3C2A1E] font-medium"
-            >
-              Messages
-            </Link>
-          </div>
-        </div>
-      </header>
+      <Header />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Search Header */}
@@ -267,11 +238,10 @@ export default function SearchPage() {
           {mockListings.map((listing) => (
             <Card
               key={listing.id}
-              className={`${
-                listing.featured
-                  ? "bg-gradient-to-br from-[#FDF8F0] to-[#FFFEF7] border-2 border-[#F6CB5A] shadow-md relative before:absolute before:left-0 before:top-0 before:bottom-0 before:w-1 before:bg-[#F6CB5A] before:rounded-l-xl"
-                  : "bg-[#FFFEF7] border border-[#ECF0F1] shadow-sm"
-              } rounded-xl hover:shadow-md transition-shadow duration-200 overflow-hidden`}
+              className={`${listing.featured
+                ? "bg-gradient-to-br from-[#FDF8F0] to-[#FFFEF7] border-2 border-[#F6CB5A] shadow-md relative before:absolute before:left-0 before:top-0 before:bottom-0 before:w-1 before:bg-[#F6CB5A] before:rounded-l-xl"
+                : "bg-[#FFFEF7] border border-[#ECF0F1] shadow-sm"
+                } rounded-xl hover:shadow-md transition-shadow duration-200 overflow-hidden`}
             >
               <div className="relative">
                 <Image
@@ -369,9 +339,8 @@ export default function SearchPage() {
                     </Button>
                   </Link>
                   <Link
-                    href={`/messages?listing=${listing.id}&provider=${
-                      listing.providerId || "provider-1"
-                    }`}
+                    href={`/messages?listing=${listing.id}&provider=${listing.providerId || "provider-1"
+                      }`}
                   >
                     <Button className="border-2 border-[#F6CB5A] text-[#F6CB5A] hover:bg-[#F6CB5A] hover:text-[#3C2A1E] py-2 px-4 rounded-lg transition-all duration-200">
                       Contact

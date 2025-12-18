@@ -116,8 +116,8 @@ export default function ResetPasswordPage() {
         {/* Left Side - Branding */}
         <div className="hidden lg:block space-y-8">
           <div className="space-y-6">
-            <Link href="/" className="flex items-center space-x-3">
-              <div className="w-12 h-12 bg-gradient-to-br from-[#F6CB5A] to-[#E6B84A] rounded-xl flex items-center justify-center">
+            <Link href="/" className="flex items-center space-x-3 group">
+              <div className="w-12 h-12 bg-gradient-to-br from-[#F6CB5A] to-[#E6B84A] rounded-xl flex items-center justify-center transition-transform group-hover:scale-105">
                 <Coffee className="w-7 h-7 text-[#3C2A1E]" />
               </div>
               <span className="text-3xl font-bold text-[#3C2A1E]">DebalE</span>

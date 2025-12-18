@@ -7,8 +7,6 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import {
-  ArrowLeft,
-  Coffee,
   Upload,
   MapPin,
   Home,
@@ -26,6 +24,7 @@ import { createListing, getProfile, createProfile } from "@/lib/supabase-crud";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { AuthGuard } from "@/components/auth-guard";
 
 const amenityOptions = [
   { id: "wifi", label: "WiFi", icon: Wifi },
@@ -38,7 +37,20 @@ const amenityOptions = [
   { id: "balcony", label: "Balcony", icon: Home },
 ];
 
+import Header from "@/components/header";
+
 export default function ListRoomPage() {
+  return (
+    <AuthGuard>
+      <div className="flex flex-col min-h-screen">
+        <Header />
+        <ListRoomContent />
+      </div>
+    </AuthGuard>
+  );
+}
+
+function ListRoomContent() {
   const { uploading, error, url, uploadListing } = useStorageUpload();
   const { user, loading } = useAuth();
   const router = useRouter();
@@ -118,46 +130,8 @@ export default function ListRoomPage() {
     }, 1000);
   };
 
-  // Show loading state while auth is being checked
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-[#FFFEF7] flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#F6CB5A] mx-auto mb-4"></div>
-          <p className="text-[#7F8C8D]">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Redirect to login if user is not authenticated
-  if (!user) {
-    router.push("/login");
-    return null;
-  }
-
   return (
-    <div className="min-h-screen bg-[#FFFEF7]">
-      {/* Header */}
-      <header className="bg-[#FFFEF7] shadow-sm border-b border-[#ECF0F1] px-6 py-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <Link href="/" className="flex items-center space-x-2">
-              <ArrowLeft className="w-5 h-5 text-[#7F8C8D]" />
-              <span className="text-[#7F8C8D] hover:text-[#3C2A1E]">
-                Back to Home
-              </span>
-            </Link>
-          </div>
-
-          <Link href="/" className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-[#F6CB5A] to-[#E6B84A] rounded-lg flex items-center justify-center">
-              <Coffee className="w-5 h-5 text-[#3C2A1E]" />
-            </div>
-            <span className="text-xl font-bold text-[#3C2A1E]">DebalE</span>
-          </Link>
-        </div>
-      </header>
+    <div className="flex-1">
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Progress Bar */}
@@ -175,11 +149,10 @@ export default function ListRoomPage() {
             {[1, 2, 3, 4].map((step) => (
               <div key={step} className="flex flex-col items-center">
                 <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                    step <= currentStep
-                      ? "bg-[#F6CB5A] text-[#3C2A1E]"
-                      : "bg-[#ECF0F1] text-[#7F8C8D]"
-                  } font-semibold`}
+                  className={`w-8 h-8 rounded-full flex items-center justify-center ${step <= currentStep
+                    ? "bg-[#F6CB5A] text-[#3C2A1E]"
+                    : "bg-[#ECF0F1] text-[#7F8C8D]"
+                    } font-semibold`}
                 >
                   {step < currentStep ? (
                     <CheckCircle className="w-5 h-5" />
@@ -195,9 +168,8 @@ export default function ListRoomPage() {
                 </span>
                 {step < 4 && (
                   <div
-                    className={`w-16 h-1 mt-2 ${
-                      step < currentStep ? "bg-[#F6CB5A]" : "bg-[#ECF0F1]"
-                    }`}
+                    className={`w-16 h-1 mt-2 ${step < currentStep ? "bg-[#F6CB5A]" : "bg-[#ECF0F1]"
+                      }`}
                   ></div>
                 )}
               </div>
@@ -321,11 +293,10 @@ export default function ListRoomPage() {
                         <button
                           key={amenity.id}
                           onClick={() => handleAmenityToggle(amenity.id)}
-                          className={`p-3 rounded-lg border-2 transition-all duration-200 ${
-                            selectedAmenities.includes(amenity.id)
-                              ? "border-[#F6CB5A] bg-[#FDF8F0] text-[#3C2A1E]"
-                              : "border-[#ECF0F1] bg-[#FFFEF7] text-[#7F8C8D] hover:border-[#F6CB5A]"
-                          }`}
+                          className={`p-3 rounded-lg border-2 transition-all duration-200 ${selectedAmenities.includes(amenity.id)
+                            ? "border-[#F6CB5A] bg-[#FDF8F0] text-[#3C2A1E]"
+                            : "border-[#ECF0F1] bg-[#FFFEF7] text-[#7F8C8D] hover:border-[#F6CB5A]"
+                            }`}
                         >
                           <amenity.icon className="w-5 h-5 mx-auto mb-1" />
                           <div className="text-xs font-medium">

@@ -8,7 +8,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import {
   Coffee,
-  ArrowLeft,
   Mail,
   Phone,
   MapPin,
@@ -67,6 +66,8 @@ const officeLocations = [
   },
 ];
 
+import Header from "@/components/header";
+
 export default function ContactPage() {
   const [formData, setFormData] = useState({
     name: "",
@@ -83,27 +84,8 @@ export default function ContactPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FFFEF7]">
-      {/* Header */}
-      <header className="bg-[#FFFEF7] shadow-sm border-b border-[#ECF0F1] px-6 py-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <Link href="/" className="flex items-center space-x-2">
-              <ArrowLeft className="w-5 h-5 text-[#7F8C8D]" />
-              <span className="text-[#7F8C8D] hover:text-[#3C2A1E]">
-                Back to Home
-              </span>
-            </Link>
-          </div>
-
-          <Link href="/" className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-[#F6CB5A] to-[#E6B84A] rounded-lg flex items-center justify-center">
-              <Coffee className="w-5 h-5 text-[#3C2A1E]" />
-            </div>
-            <span className="text-xl font-bold text-[#3C2A1E]">DebalE</span>
-          </Link>
-        </div>
-      </header>
+    <div className="min-h-screen bg-[#FFFEF7] flex flex-col">
+      <Header />
 
       {/* Hero Section */}
       <section className="py-16 bg-gradient-to-br from-[#FDF8F0] to-[#FFFEF7]">
@@ -446,7 +428,7 @@ export default function ContactPage() {
 
           <div className="border-t border-[#7F8C8D] mt-8 pt-8 text-center">
             <p className="text-[#7F8C8D]">
-              © 2024 DebalE. Made with ❤️ for Ethiopia. All rights reserved.
+              © 2026 DebalE. Made with ❤️ All rights reserved.
             </p>
           </div>
         </div>

@@ -36,11 +36,51 @@ const amenityOptions = [
   { id: "balcony", label: "Balcony", icon: Home },
 ]
 
+import Header from "@/components/header";
+
+interface OnboardingData {
+  fullName: string;
+  age: string;
+  gender: string;
+  phone: string;
+  currentLocation: string;
+  preferredAreas: string[];
+  budgetMin: string;
+  budgetMax: string;
+  moveInDate: string;
+  depositCapacity: string;
+  livingStyle: string;
+  smoking: string;
+  pets: string;
+  cleanliness: string;
+  agePreference: string;
+  genderPreference: string;
+  religiousConsiderations: string;
+  roomType: string;
+  essentialAmenities: string[];
+  transportationNeeds: string;
+  propertyLocation: string;
+  neighborhood: string;
+  roomSize: string;
+  availableDate: string;
+  monthlyRent: string;
+  whatsIncluded: string[];
+  depositRequired: string;
+  leaseTerms: string;
+  photos: string[];
+  amenities: string[];
+  houseRules: string;
+  preferredAge: string;
+  preferredGender: string;
+  preferredOccupation: string;
+  dealBreakers: string;
+}
+
 export default function OnboardingPage() {
   const [currentStep, setCurrentStep] = useState(1)
   const [userType, setUserType] = useState("")
   const [isAnimating, setIsAnimating] = useState(false)
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<OnboardingData>({
     // Basic Info
     fullName: "",
     age: "",
@@ -114,7 +154,7 @@ export default function OnboardingPage() {
     handleNext()
   }
 
-  const toggleArrayItem = (array: string[], item: string, field: string) => {
+  const toggleArrayItem = (array: string[], item: string, field: keyof OnboardingData) => {
     const newArray = array.includes(item) ? array.filter((i) => i !== item) : [...array, item]
     setFormData({ ...formData, [field]: newArray })
   }
@@ -152,27 +192,22 @@ export default function OnboardingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#FFFEF7] to-[#FDF8F0]">
-      {/* Header */}
-      <header className="bg-[#FFFEF7]/80 backdrop-blur-sm shadow-sm border-b border-[#ECF0F1] px-6 py-4 sticky top-0 z-50">
-        <div className="max-w-4xl mx-auto flex items-center justify-between">
-          <Link href="/" className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-[#F6CB5A] to-[#E6B84A] rounded-lg flex items-center justify-center">
-              <Coffee className="w-5 h-5 text-[#3C2A1E]" />
-            </div>
-            <span className="text-xl font-bold text-[#3C2A1E]">DebalE</span>
-          </Link>
+    <div className="min-h-screen bg-gradient-to-br from-[#FFFEF7] to-[#FDF8F0] flex flex-col">
+      <Header />
 
+      {/* Onboarding Progress Header */}
+      <div className="bg-[#FFFEF7]/80 backdrop-blur-md border-b border-[#ECF0F1] sticky top-[73px] z-40 px-6 py-3">
+        <div className="max-w-4xl mx-auto flex items-center justify-between">
+          <div className="text-sm font-bold text-[#3C2A1E]">
+            Onboarding Progress
+          </div>
           <div className="flex items-center space-x-4">
-            <div className="text-sm text-[#7F8C8D]">
-              Step {currentStep} of {getTotalSteps()}
+            <div className="px-3 py-1 bg-[#FDF8F0] rounded-full border border-[#F6CB5A]/30 text-xs font-bold text-[#F6CB5A]">
+              STEP {currentStep} OF {getTotalSteps()}
             </div>
-            <Link href="/login" className="text-[#F6CB5A] hover:text-[#E6B84A] font-medium">
-              Sign In
-            </Link>
           </div>
         </div>
-      </header>
+      </div>
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Progress Bar */}
@@ -182,21 +217,19 @@ export default function OnboardingPage() {
               {Array.from({ length: getTotalSteps() - 1 }, (_, i) => i + 2).map((step) => (
                 <div key={step} className="flex items-center">
                   <div
-                    className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-500 ${
-                      step <= currentStep
-                        ? "bg-[#F6CB5A] text-[#3C2A1E] shadow-lg scale-110"
-                        : step === currentStep + 1
-                          ? "bg-[#FDF8F0] border-2 border-[#F6CB5A] text-[#F6CB5A] animate-pulse"
-                          : "bg-[#ECF0F1] text-[#7F8C8D]"
-                    } font-semibold`}
+                    className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-500 ${step <= currentStep
+                      ? "bg-[#F6CB5A] text-[#3C2A1E] shadow-lg scale-110"
+                      : step === currentStep + 1
+                        ? "bg-[#FDF8F0] border-2 border-[#F6CB5A] text-[#F6CB5A] animate-pulse"
+                        : "bg-[#ECF0F1] text-[#7F8C8D]"
+                      } font-semibold`}
                   >
                     {step < currentStep ? <CheckCircle className="w-6 h-6" /> : step - 1}
                   </div>
                   {step < getTotalSteps() && (
                     <div
-                      className={`w-16 h-2 mx-2 rounded-full transition-all duration-500 ${
-                        step < currentStep ? "bg-[#F6CB5A]" : "bg-[#ECF0F1]"
-                      }`}
+                      className={`w-16 h-2 mx-2 rounded-full transition-all duration-500 ${step < currentStep ? "bg-[#F6CB5A]" : "bg-[#ECF0F1]"
+                        }`}
                     ></div>
                   )}
                 </div>
@@ -207,9 +240,8 @@ export default function OnboardingPage() {
 
         {/* Main Content */}
         <div
-          className={`transition-all duration-300 ${
-            isAnimating ? "opacity-0 transform translate-x-4" : "opacity-100 transform translate-x-0"
-          }`}
+          className={`transition-all duration-300 ${isAnimating ? "opacity-0 transform translate-x-4" : "opacity-100 transform translate-x-0"
+            }`}
         >
           <Card className="bg-[#FFFEF7]/90 backdrop-blur-sm border border-[#ECF0F1] rounded-2xl shadow-xl">
             <CardContent className="p-8 md:p-12">
@@ -325,11 +357,10 @@ export default function OnboardingPage() {
                               <button
                                 key={gender}
                                 onClick={() => setFormData({ ...formData, gender: gender.toLowerCase() })}
-                                className={`p-3 rounded-xl border-2 transition-all duration-200 ${
-                                  formData.gender === gender.toLowerCase()
-                                    ? "border-[#F6CB5A] bg-[#FDF8F0] text-[#3C2A1E] shadow-md"
-                                    : "border-[#ECF0F1] bg-[#FFFEF7] text-[#7F8C8D] hover:border-[#F6CB5A]"
-                                }`}
+                                className={`p-3 rounded-xl border-2 transition-all duration-200 ${formData.gender === gender.toLowerCase()
+                                  ? "border-[#F6CB5A] bg-[#FDF8F0] text-[#3C2A1E] shadow-md"
+                                  : "border-[#ECF0F1] bg-[#FFFEF7] text-[#7F8C8D] hover:border-[#F6CB5A]"
+                                  }`}
                               >
                                 {gender}
                               </button>
@@ -364,11 +395,10 @@ export default function OnboardingPage() {
                               <button
                                 key={area}
                                 onClick={() => toggleArrayItem(formData.preferredAreas, area, "preferredAreas")}
-                                className={`p-2 rounded-lg border-2 text-sm transition-all duration-200 ${
-                                  formData.preferredAreas.includes(area)
-                                    ? "border-[#F6CB5A] bg-[#FDF8F0] text-[#3C2A1E]"
-                                    : "border-[#ECF0F1] bg-[#FFFEF7] text-[#7F8C8D] hover:border-[#F6CB5A]"
-                                }`}
+                                className={`p-2 rounded-lg border-2 text-sm transition-all duration-200 ${formData.preferredAreas.includes(area)
+                                  ? "border-[#F6CB5A] bg-[#FDF8F0] text-[#3C2A1E]"
+                                  : "border-[#ECF0F1] bg-[#FFFEF7] text-[#7F8C8D] hover:border-[#F6CB5A]"
+                                  }`}
                               >
                                 {area}
                               </button>
@@ -476,11 +506,10 @@ export default function OnboardingPage() {
                                 <button
                                   key={option.value}
                                   onClick={() => setFormData({ ...formData, livingStyle: option.value })}
-                                  className={`w-full p-3 rounded-xl border-2 text-left transition-all duration-200 ${
-                                    formData.livingStyle === option.value
-                                      ? "border-[#F6CB5A] bg-[#FDF8F0] text-[#3C2A1E] shadow-md"
-                                      : "border-[#ECF0F1] bg-[#FFFEF7] text-[#7F8C8D] hover:border-[#F6CB5A]"
-                                  }`}
+                                  className={`w-full p-3 rounded-xl border-2 text-left transition-all duration-200 ${formData.livingStyle === option.value
+                                    ? "border-[#F6CB5A] bg-[#FDF8F0] text-[#3C2A1E] shadow-md"
+                                    : "border-[#ECF0F1] bg-[#FFFEF7] text-[#7F8C8D] hover:border-[#F6CB5A]"
+                                    }`}
                                 >
                                   {option.label}
                                 </button>
@@ -499,11 +528,10 @@ export default function OnboardingPage() {
                                 <button
                                   key={option.value}
                                   onClick={() => setFormData({ ...formData, smoking: option.value })}
-                                  className={`w-full p-3 rounded-xl border-2 text-left transition-all duration-200 ${
-                                    formData.smoking === option.value
-                                      ? "border-[#F6CB5A] bg-[#FDF8F0] text-[#3C2A1E] shadow-md"
-                                      : "border-[#ECF0F1] bg-[#FFFEF7] text-[#7F8C8D] hover:border-[#F6CB5A]"
-                                  }`}
+                                  className={`w-full p-3 rounded-xl border-2 text-left transition-all duration-200 ${formData.smoking === option.value
+                                    ? "border-[#F6CB5A] bg-[#FDF8F0] text-[#3C2A1E] shadow-md"
+                                    : "border-[#ECF0F1] bg-[#FFFEF7] text-[#7F8C8D] hover:border-[#F6CB5A]"
+                                    }`}
                                 >
                                   {option.label}
                                 </button>
@@ -522,11 +550,10 @@ export default function OnboardingPage() {
                                 <button
                                   key={option.value}
                                   onClick={() => setFormData({ ...formData, pets: option.value })}
-                                  className={`w-full p-3 rounded-xl border-2 text-left transition-all duration-200 ${
-                                    formData.pets === option.value
-                                      ? "border-[#F6CB5A] bg-[#FDF8F0] text-[#3C2A1E] shadow-md"
-                                      : "border-[#ECF0F1] bg-[#FFFEF7] text-[#7F8C8D] hover:border-[#F6CB5A]"
-                                  }`}
+                                  className={`w-full p-3 rounded-xl border-2 text-left transition-all duration-200 ${formData.pets === option.value
+                                    ? "border-[#F6CB5A] bg-[#FDF8F0] text-[#3C2A1E] shadow-md"
+                                    : "border-[#ECF0F1] bg-[#FFFEF7] text-[#7F8C8D] hover:border-[#F6CB5A]"
+                                    }`}
                                 >
                                   {option.label}
                                 </button>
@@ -545,11 +572,10 @@ export default function OnboardingPage() {
                                 <button
                                   key={option.value}
                                   onClick={() => setFormData({ ...formData, cleanliness: option.value })}
-                                  className={`w-full p-3 rounded-xl border-2 text-left transition-all duration-200 ${
-                                    formData.cleanliness === option.value
-                                      ? "border-[#F6CB5A] bg-[#FDF8F0] text-[#3C2A1E] shadow-md"
-                                      : "border-[#ECF0F1] bg-[#FFFEF7] text-[#7F8C8D] hover:border-[#F6CB5A]"
-                                  }`}
+                                  className={`w-full p-3 rounded-xl border-2 text-left transition-all duration-200 ${formData.cleanliness === option.value
+                                    ? "border-[#F6CB5A] bg-[#FDF8F0] text-[#3C2A1E] shadow-md"
+                                    : "border-[#ECF0F1] bg-[#FFFEF7] text-[#7F8C8D] hover:border-[#F6CB5A]"
+                                    }`}
                                 >
                                   {option.label}
                                 </button>
@@ -628,11 +654,10 @@ export default function OnboardingPage() {
                               <button
                                 key={option.value}
                                 onClick={() => setFormData({ ...formData, roomType: option.value })}
-                                className={`p-3 rounded-xl border-2 text-center transition-all duration-200 ${
-                                  formData.roomType === option.value
-                                    ? "border-[#F6CB5A] bg-[#FDF8F0] text-[#3C2A1E] shadow-md"
-                                    : "border-[#ECF0F1] bg-[#FFFEF7] text-[#7F8C8D] hover:border-[#F6CB5A]"
-                                }`}
+                                className={`p-3 rounded-xl border-2 text-center transition-all duration-200 ${formData.roomType === option.value
+                                  ? "border-[#F6CB5A] bg-[#FDF8F0] text-[#3C2A1E] shadow-md"
+                                  : "border-[#ECF0F1] bg-[#FFFEF7] text-[#7F8C8D] hover:border-[#F6CB5A]"
+                                  }`}
                               >
                                 {option.label}
                               </button>
@@ -649,11 +674,10 @@ export default function OnboardingPage() {
                                 onClick={() =>
                                   toggleArrayItem(formData.essentialAmenities, amenity.id, "essentialAmenities")
                                 }
-                                className={`p-3 rounded-xl border-2 transition-all duration-200 ${
-                                  formData.essentialAmenities.includes(amenity.id)
-                                    ? "border-[#F6CB5A] bg-[#FDF8F0] text-[#3C2A1E] shadow-md"
-                                    : "border-[#ECF0F1] bg-[#FFFEF7] text-[#7F8C8D] hover:border-[#F6CB5A]"
-                                }`}
+                                className={`p-3 rounded-xl border-2 transition-all duration-200 ${formData.essentialAmenities.includes(amenity.id)
+                                  ? "border-[#F6CB5A] bg-[#FDF8F0] text-[#3C2A1E] shadow-md"
+                                  : "border-[#ECF0F1] bg-[#FFFEF7] text-[#7F8C8D] hover:border-[#F6CB5A]"
+                                  }`}
                               >
                                 <amenity.icon className="w-5 h-5 mx-auto mb-1" />
                                 <div className="text-xs font-medium">{amenity.label}</div>
@@ -784,11 +808,10 @@ export default function OnboardingPage() {
                               <button
                                 key={item}
                                 onClick={() => toggleArrayItem(formData.whatsIncluded, item, "whatsIncluded")}
-                                className={`p-2 rounded-lg border-2 text-sm transition-all duration-200 ${
-                                  formData.whatsIncluded.includes(item)
-                                    ? "border-[#F6CB5A] bg-[#FDF8F0] text-[#3C2A1E]"
-                                    : "border-[#ECF0F1] bg-[#FFFEF7] text-[#7F8C8D] hover:border-[#F6CB5A]"
-                                }`}
+                                className={`p-2 rounded-lg border-2 text-sm transition-all duration-200 ${formData.whatsIncluded.includes(item)
+                                  ? "border-[#F6CB5A] bg-[#FDF8F0] text-[#3C2A1E]"
+                                  : "border-[#ECF0F1] bg-[#FFFEF7] text-[#7F8C8D] hover:border-[#F6CB5A]"
+                                  }`}
                               >
                                 {item}
                               </button>
@@ -846,11 +869,10 @@ export default function OnboardingPage() {
                               <button
                                 key={amenity.id}
                                 onClick={() => toggleArrayItem(formData.amenities, amenity.id, "amenities")}
-                                className={`p-3 rounded-xl border-2 transition-all duration-200 ${
-                                  formData.amenities.includes(amenity.id)
-                                    ? "border-[#F6CB5A] bg-[#FDF8F0] text-[#3C2A1E] shadow-md"
-                                    : "border-[#ECF0F1] bg-[#FFFEF7] text-[#7F8C8D] hover:border-[#F6CB5A]"
-                                }`}
+                                className={`p-3 rounded-xl border-2 transition-all duration-200 ${formData.amenities.includes(amenity.id)
+                                  ? "border-[#F6CB5A] bg-[#FDF8F0] text-[#3C2A1E] shadow-md"
+                                  : "border-[#ECF0F1] bg-[#FFFEF7] text-[#7F8C8D] hover:border-[#F6CB5A]"
+                                  }`}
                               >
                                 <amenity.icon className="w-5 h-5 mx-auto mb-1" />
                                 <div className="text-xs font-medium">{amenity.label}</div>

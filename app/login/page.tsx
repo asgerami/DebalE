@@ -138,10 +138,10 @@ export default function LoginPage() {
         </div>
 
         {/* Right Side - Form */}
-        <div className="bg-white p-8 lg:p-14 flex flex-col justify-center">
+        <div className="bg-[#FFFEF7] p-8 lg:p-14 flex flex-col justify-center">
           <div className="lg:hidden mb-8 self-center">
             <Link href="/" className="flex items-center space-x-2">
-              <div className="w-10 h-10 bg-[#F6CB5A] rounded-xl flex items-center justify-center shadow-md">
+              <div className="w-10 h-10 bg-gradient-to-br from-[#F6CB5A] to-[#E6B84A] rounded-lg flex items-center justify-center shadow-md">
                 <Coffee className="w-6 h-6 text-[#3C2A1E]" />
               </div>
               <span className="text-2xl font-bold text-[#3C2A1E]">DebalE</span>

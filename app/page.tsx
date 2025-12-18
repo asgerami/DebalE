@@ -18,72 +18,12 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
-import MobileNav from "@/components/mobile-nav";
-import { useAuth } from "@/contexts/AuthContext";
+import Header from "@/components/header";
 
 export default function LandingPage() {
-  const { user } = useAuth();
-
   return (
-    <div className="min-h-screen bg-[#FFFEF7]">
-      {/* Header */}
-      <header className="bg-[#FFFEF7] shadow-sm border-b border-[#ECF0F1] px-6 py-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <div className="w-10 h-10 bg-gradient-to-br from-[#F6CB5A] to-[#E6B84A] rounded-lg flex items-center justify-center">
-              <Coffee className="w-6 h-6 text-[#3C2A1E]" />
-            </div>
-            <span className="text-2xl font-bold text-[#3C2A1E]">DebalE</span>
-          </div>
-
-          <nav className="hidden md:flex items-center space-x-8">
-            <Link
-              href="/search"
-              className="text-[#7F8C8D] hover:text-[#3C2A1E] font-medium transition-colors"
-            >
-              Find Rooms
-            </Link>
-            <Link
-              href="/list-room"
-              className="text-[#7F8C8D] hover:text-[#3C2A1E] font-medium transition-colors"
-            >
-              List Room
-            </Link>
-            <Link
-              href="/how-it-works"
-              className="text-[#7F8C8D] hover:text-[#3C2A1E] font-medium transition-colors"
-            >
-              How It Works
-            </Link>
-            {user ? (
-              <>
-                <Link
-                  href="/profile"
-                  className="text-[#7F8C8D] hover:bg-[#FDF8F0] py-2 px-4 rounded-md transition-colors duration-200"
-                >
-                  Profile
-                </Link>
-              </>
-            ) : (
-              <>
-                <Link
-                  href="/login"
-                  className="text-[#7F8C8D] hover:bg-[#FDF8F0] py-2 px-4 rounded-md transition-colors duration-200"
-                >
-                  Sign In
-                </Link>
-                <Link href="/register">
-                  <Button className="bg-[#F6CB5A] hover:bg-[#E6B84A] text-[#3C2A1E] font-semibold py-3 px-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-200">
-                    Get Started
-                  </Button>
-                </Link>
-              </>
-            )}
-          </nav>
-
-          <MobileNav />
-        </div>
-      </header>
+    <div className="min-h-screen bg-[#FFFEF7] flex flex-col">
+      <Header />
 
       {/* Hero Section */}
       <section className="py-16 md:py-24">

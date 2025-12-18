@@ -5,7 +5,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
   Coffee,
-  ArrowLeft,
   User,
   Search,
   MessageCircle,
@@ -123,29 +122,12 @@ const testimonials = [
   },
 ];
 
+import Header from "@/components/header";
+
 export default function HowItWorksPage() {
   return (
-    <div className="min-h-screen bg-[#FFFEF7]">
-      {/* Header */}
-      <header className="bg-[#FFFEF7] shadow-sm border-b border-[#ECF0F1] px-6 py-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <Link href="/" className="flex items-center space-x-2">
-              <ArrowLeft className="w-5 h-5 text-[#7F8C8D]" />
-              <span className="text-[#7F8C8D] hover:text-[#3C2A1E]">
-                Back to Home
-              </span>
-            </Link>
-          </div>
-
-          <Link href="/" className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-[#F6CB5A] to-[#E6B84A] rounded-lg flex items-center justify-center">
-              <Coffee className="w-5 h-5 text-[#3C2A1E]" />
-            </div>
-            <span className="text-xl font-bold text-[#3C2A1E]">DebalE</span>
-          </Link>
-        </div>
-      </header>
+    <div className="min-h-screen bg-[#FFFEF7] selection:bg-[#F6CB5A]/30 flex flex-col">
+      <Header />
 
       {/* Hero Section */}
       <section className="py-16 bg-gradient-to-br from-[#FDF8F0] to-[#FFFEF7]">
@@ -195,14 +177,12 @@ export default function HowItWorksPage() {
             {steps.map((step, index) => (
               <div
                 key={step.step}
-                className={`grid lg:grid-cols-2 gap-12 items-center ${
-                  index % 2 === 1 ? "lg:grid-flow-col-dense" : ""
-                }`}
+                className={`grid lg:grid-cols-2 gap-12 items-center ${index % 2 === 1 ? "lg:grid-flow-col-dense" : ""
+                  }`}
               >
                 <div
-                  className={`space-y-6 ${
-                    index % 2 === 1 ? "lg:col-start-2" : ""
-                  }`}
+                  className={`space-y-6 ${index % 2 === 1 ? "lg:col-start-2" : ""
+                    }`}
                 >
                   <div className="flex items-center space-x-4">
                     <div className="w-12 h-12 bg-[#F6CB5A] rounded-full flex items-center justify-center">

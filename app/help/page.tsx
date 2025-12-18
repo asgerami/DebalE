@@ -6,9 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import {
-  Coffee,
   Search,
-  ArrowLeft,
   MessageCircle,
   Phone,
   Mail,
@@ -137,6 +135,8 @@ const faqCategories = [
   },
 ]
 
+import Header from "@/components/header";
+
 export default function HelpPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [expandedCategory, setExpandedCategory] = useState<string | null>("getting-started")
@@ -160,30 +160,8 @@ export default function HelpPage() {
     .filter((category) => category.questions.length > 0 || searchQuery === "")
 
   return (
-    <div className="min-h-screen bg-[#FFFEF7]">
-      {/* Header */}
-      <header className="bg-[#FFFEF7] shadow-sm border-b border-[#ECF0F1] px-6 py-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <Link href="/" className="flex items-center space-x-2">
-              <ArrowLeft className="w-5 h-5 text-[#7F8C8D]" />
-              <div className="w-8 h-8 bg-gradient-to-br from-[#F6CB5A] to-[#E6B84A] rounded-lg flex items-center justify-center">
-                <Coffee className="w-5 h-5 text-[#3C2A1E]" />
-              </div>
-              <span className="text-xl font-bold text-[#3C2A1E]">DebalE</span>
-            </Link>
-          </div>
-
-          <div className="flex items-center space-x-4">
-            <Link href="/dashboard" className="text-[#7F8C8D] hover:text-[#3C2A1E] font-medium">
-              Dashboard
-            </Link>
-            <Link href="/contact" className="text-[#7F8C8D] hover:text-[#3C2A1E] font-medium">
-              Contact
-            </Link>
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen bg-[#FFFEF7] flex flex-col">
+      <Header />
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Hero Section */}

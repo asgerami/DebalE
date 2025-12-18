@@ -89,6 +89,8 @@ const mockListing = {
   ],
 };
 
+import Header from "@/components/header";
+
 export default function ListingDetailPage() {
   // Example usage of the listings hook
   const { listings, loading, error, addListing, editListing } = useListings();
@@ -97,35 +99,35 @@ export default function ListingDetailPage() {
   const [showContactForm, setShowContactForm] = useState(false);
 
   return (
-    <div className="min-h-screen bg-[#FFFEF7]">
-      {/* Header */}
-      <header className="bg-[#FFFEF7] shadow-sm border-b border-[#ECF0F1] px-6 py-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <Link href="/search" className="flex items-center space-x-2">
-              <ArrowLeft className="w-5 h-5 text-[#7F8C8D]" />
-              <span className="text-[#7F8C8D] hover:text-[#3C2A1E]">
-                Back to Search
-              </span>
-            </Link>
-          </div>
+    <div className="min-h-screen bg-[#FFFEF7] flex flex-col">
+      <Header />
 
-          <div className="flex items-center space-x-4">
+      {/* Sub-header Actions */}
+      <div className="bg-[#FFFEF7]/80 backdrop-blur-md border-b border-[#ECF0F1] sticky top-[73px] z-40 px-6 py-3">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+          <Link href="/search" className="flex items-center space-x-2 text-[#7F8C8D] hover:text-[#3C2A1E] transition-colors group">
+            <ArrowLeft className="w-5 h-5 transition-transform group-hover:-translate-x-1" />
+            <span className="font-medium">Back to Search</span>
+          </Link>
+
+          <div className="flex items-center space-x-2">
             <Button
               variant="ghost"
-              className="text-[#7F8C8D] hover:bg-[#FDF8F0] p-2 rounded-md"
+              size="icon"
+              className="text-[#7F8C8D] hover:bg-[#FDF8F0] rounded-xl"
             >
               <Share2 className="w-5 h-5" />
             </Button>
             <Button
               variant="ghost"
-              className="text-[#7F8C8D] hover:text-[#E74C3C] hover:bg-[#FDF8F0] p-2 rounded-md"
+              size="icon"
+              className="text-[#7F8C8D] hover:text-[#E74C3C] hover:bg-[#FDF8F0] rounded-xl"
             >
               <Heart className="w-5 h-5" />
             </Button>
           </div>
         </div>
-      </header>
+      </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid lg:grid-cols-3 gap-8">
@@ -165,9 +167,8 @@ export default function ListingDetailPage() {
                   <button
                     key={index}
                     onClick={() => setCurrentImageIndex(index)}
-                    className={`relative rounded-lg overflow-hidden ${
-                      currentImageIndex === index ? "ring-2 ring-[#F6CB5A]" : ""
-                    }`}
+                    className={`relative rounded-lg overflow-hidden ${currentImageIndex === index ? "ring-2 ring-[#F6CB5A]" : ""
+                      }`}
                   >
                     <Image
                       src={image || "/placeholder.svg"}
