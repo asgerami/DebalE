@@ -162,6 +162,10 @@ function DashboardContent() {
                 { label: "Saved Rooms", icon: Sparkles, color: "bg-[#FDF8F0] text-[#F6CB5A]", href: "/saved" },
                 { label: "Active Matches", icon: Zap, color: "bg-[#FDF8F0] text-[#F6CB5A]", href: "/matches" },
                 { label: "Verification", icon: ShieldCheck, color: "bg-[#FDF8F0] text-[#F6CB5A]", href: "/verify" },
+                // Admin link - only visible to admins
+                ...(["admin@debale.com", "amir@debale.com", "amaborami@gmail.com"].includes(user?.email || "") 
+                  ? [{ label: "Admin Panel", icon: ShieldCheck, color: "bg-red-100 text-red-600", href: "/admin" }] 
+                  : []),
               ].map((item) => (
                 <Link key={item.label} href={item.href}>
                   <div className="flex items-center justify-between p-4 rounded-2xl bg-[#FFFEF7] hover:bg-[#FDF8F0] border border-[#ECF0F1] hover:border-[#F6CB5A]/30 transition-all group">
