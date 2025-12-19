@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { AuthGuard } from "@/components/auth-guard";
 import { Button } from "@/components/ui/button";
@@ -30,6 +31,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import Header from "@/components/header";
+import { supabase } from "@/lib/supabase";
 
 export default function DashboardPage() {
   return (
@@ -44,7 +46,26 @@ export default function DashboardPage() {
 
 function DashboardContent() {
   const { user } = useAuth();
+  const [isAdmin, setIsAdmin] = useState(false);
   const fullName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || "User";
+
+  // Check admin status from database
+  useEffect(() => {
+    async function checkAdmin() {
+      if (!user) return;
+      try {
+        const { data } = await supabase
+          .from("profiles")
+          .select("is_admin")
+          .eq("id", user.id)
+          .single();
+        setIsAdmin(data?.is_admin || false);
+      } catch {
+        setIsAdmin(false);
+      }
+    }
+    checkAdmin();
+  }, [user]);
 
   const getUserInitials = (name: string) => {
     if (!name) return "U";
@@ -162,8 +183,8 @@ function DashboardContent() {
                 { label: "Saved Rooms", icon: Sparkles, color: "bg-[#FDF8F0] text-[#F6CB5A]", href: "/saved" },
                 { label: "Active Matches", icon: Zap, color: "bg-[#FDF8F0] text-[#F6CB5A]", href: "/matches" },
                 { label: "Verification", icon: ShieldCheck, color: "bg-[#FDF8F0] text-[#F6CB5A]", href: "/verify" },
-                // Admin link - only visible to admins
-                ...(["admin@debale.com", "amir@debale.com", "amaborami@gmail.com"].includes(user?.email || "") 
+                // Admin link - only visible to admins (checked from database)
+                ...(isAdmin 
                   ? [{ label: "Admin Panel", icon: ShieldCheck, color: "bg-red-100 text-red-600", href: "/admin" }] 
                   : []),
               ].map((item) => (

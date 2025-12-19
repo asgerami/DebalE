@@ -29,14 +29,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 
-// Admin emails - add your admin email here
-// You can add more admin emails to this array
-const ADMIN_EMAILS = [
-  "admin@debale.com",
-  "amir@debale.com",
-  "amaborami@gmail.com", // Add your email here
-];
-
 type AdminTab = "overview" | "verifications" | "users" | "listings" | "reports";
 
 export default function AdminPage() {
@@ -46,16 +38,39 @@ export default function AdminPage() {
   const [checking, setChecking] = useState(true);
 
   useEffect(() => {
-    if (!loading) {
+    async function checkAdminStatus() {
+      if (loading) return;
+      
       if (!user) {
         router.push("/login");
-      } else if (ADMIN_EMAILS.includes(user.email || "")) {
-        setIsAdmin(true);
-      } else {
-        router.push("/dashboard");
+        setChecking(false);
+        return;
       }
-      setChecking(false);
+
+      try {
+        // Check if user is admin from profiles table
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("is_admin")
+          .eq("id", user.id)
+          .single();
+
+        if (error) throw error;
+
+        if (data?.is_admin) {
+          setIsAdmin(true);
+        } else {
+          router.push("/dashboard");
+        }
+      } catch (err) {
+        console.error("Error checking admin status:", err);
+        router.push("/dashboard");
+      } finally {
+        setChecking(false);
+      }
     }
+
+    checkAdminStatus();
   }, [user, loading, router]);
 
   if (loading || checking) {
