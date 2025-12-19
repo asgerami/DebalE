@@ -419,10 +419,6 @@ function ProfileContent() {
           </div>
         </div>
       </main>
-
-      <footer className="mt-auto py-10 text-center text-gray-400 font-bold text-sm">
-        <p>&copy; 2025 DebalE &bull; Secure Ethiopian Living</p>
-      </footer>
     </div>
   );
 }

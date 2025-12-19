@@ -249,9 +249,6 @@ function DashboardContent() {
           )}
         </div>
       </div>
-      <footer className="mt-auto py-10 text-center text-gray-400 font-bold text-sm">
-        <p>&copy; 2025 DebalE &bull; Made with ☕ in Ethiopia</p>
-      </footer>
     </main>
   );
 }

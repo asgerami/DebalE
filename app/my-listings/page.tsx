@@ -23,6 +23,7 @@ import { AuthGuard } from "@/components/auth-guard";
 import {
   getUserListings,
   updateListing,
+  deleteListing,
   getListingPhotos,
 } from "@/lib/supabase-crud";
 import { Listing } from "@/lib/supabase";
@@ -100,12 +101,11 @@ function MyListingsContent() {
   };
 
   const handleDelete = async (listingId: string) => {
-    if (!confirm("Are you sure you want to delete this listing?")) return;
+    if (!confirm("Are you sure you want to permanently delete this listing? This action cannot be undone.")) return;
 
     setDeletingId(listingId);
     try {
-      // Instead of deleting, we'll mark as inactive
-      await updateListing(listingId, { is_active: false });
+      await deleteListing(listingId);
       setListings((prev) => prev.filter((listing) => listing.id !== listingId));
     } catch (err: any) {
       console.error("Error deleting listing:", err);

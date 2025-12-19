@@ -112,6 +112,14 @@ export async function updateListing(id: string, updates: Partial<Listing>) {
   return data as Listing;
 }
 
+export async function deleteListing(id: string) {
+  const { error } = await supabase
+    .from("listings")
+    .delete()
+    .eq("id", id);
+  if (error) throw error;
+}
+
 // --- Real-time Messaging ---
 export function subscribeToMessages(
   matchId: string,
