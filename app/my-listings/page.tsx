@@ -6,6 +6,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   MapPin,
   Edit,
   Trash2,
@@ -15,6 +23,7 @@ import {
   Loader2,
   Calendar,
   DollarSign,
+  AlertTriangle,
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -28,6 +37,7 @@ import {
 } from "@/lib/supabase-crud";
 import { Listing } from "@/lib/supabase";
 import Header from "@/components/header";
+import { toast } from "sonner";
 
 const PLACEHOLDER_IMAGE = "/placeholder.svg";
 
@@ -52,33 +62,42 @@ function MyListingsContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [listingToDelete, setListingToDelete] = useState<Listing | null>(null);
 
   useEffect(() => {
-    if (user) {
+    if (user?.id) {
       fetchListings();
     }
-  }, [user]);
+  }, [user?.id]);
 
   const fetchListings = async () => {
-    if (!user) return;
+    if (!user?.id) {
+      setLoading(false);
+      return;
+    }
 
     setLoading(true);
     setError(null);
 
     try {
       const data = await getUserListings(user.id);
-      setListings(data);
+      setListings(data || []);
 
       // Fetch photos for each listing
       const photosMap: Record<string, string[]> = {};
-      for (const listing of data) {
-        const photos = await getListingPhotos(listing.id);
-        photosMap[listing.id] = photos;
+      for (const listing of data || []) {
+        try {
+          const photos = await getListingPhotos(listing.id);
+          photosMap[listing.id] = photos;
+        } catch {
+          photosMap[listing.id] = [];
+        }
       }
       setListingPhotos(photosMap);
     } catch (err: any) {
       console.error("Error fetching listings:", err);
-      setError(err.message || "Failed to load listings");
+      setError(err?.message || "Failed to load listings. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -94,24 +113,34 @@ function MyListingsContent() {
             : listing
         )
       );
+      toast.success(currentStatus ? "Listing deactivated" : "Listing activated");
     } catch (err: any) {
       console.error("Error toggling listing status:", err);
-      alert("Failed to update listing status");
+      toast.error("Failed to update listing status");
     }
   };
 
-  const handleDelete = async (listingId: string) => {
-    if (!confirm("Are you sure you want to permanently delete this listing? This action cannot be undone.")) return;
+  const openDeleteDialog = (listing: Listing) => {
+    setListingToDelete(listing);
+    setDeleteDialogOpen(true);
+  };
 
-    setDeletingId(listingId);
+  const handleDelete = async () => {
+    if (!listingToDelete) return;
+
+    setDeletingId(listingToDelete.id);
+    setDeleteDialogOpen(false);
+    
     try {
-      await deleteListing(listingId);
-      setListings((prev) => prev.filter((listing) => listing.id !== listingId));
+      await deleteListing(listingToDelete.id);
+      setListings((prev) => prev.filter((listing) => listing.id !== listingToDelete.id));
+      toast.success("Listing deleted successfully");
     } catch (err: any) {
       console.error("Error deleting listing:", err);
-      alert("Failed to delete listing");
+      toast.error("Failed to delete listing");
     } finally {
       setDeletingId(null);
+      setListingToDelete(null);
     }
   };
 
@@ -318,7 +347,7 @@ function MyListingsContent() {
                         </Button>
                         <Button
                           variant="outline"
-                          onClick={() => handleDelete(listing.id)}
+                          onClick={() => openDeleteDialog(listing)}
                           disabled={deletingId === listing.id}
                           className="border-[#E74C3C] text-[#E74C3C] hover:bg-[#FFEBEE]"
                         >
@@ -336,6 +365,39 @@ function MyListingsContent() {
             })}
           </div>
         )}
+
+        {/* Delete Confirmation Dialog */}
+        <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader className="text-center sm:text-center">
+              <div className="mx-auto w-14 h-14 bg-red-100 rounded-full flex items-center justify-center mb-4">
+                <AlertTriangle className="w-7 h-7 text-red-600" />
+              </div>
+              <DialogTitle className="text-xl text-[#3C2A1E]">Delete Listing</DialogTitle>
+              <DialogDescription className="text-[#7F8C8D] pt-2">
+                Are you sure you want to delete{" "}
+                <span className="font-semibold text-[#3C2A1E]">"{listingToDelete?.title}"</span>?
+                This action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter className="flex gap-3 sm:gap-3 mt-4">
+              <Button
+                variant="outline"
+                onClick={() => setDeleteDialogOpen(false)}
+                className="flex-1 h-11 rounded-xl border-[#ECF0F1] text-[#3C2A1E] hover:bg-[#FDF8F0]"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleDelete}
+                className="flex-1 h-11 rounded-xl bg-red-600 hover:bg-red-700 text-white"
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Delete
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );

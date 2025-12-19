@@ -77,8 +77,13 @@ export async function getUserListings(userId: string) {
     .select("*")
     .eq("provider_id", userId)
     .order("created_at", { ascending: false });
-  if (error) throw error;
-  return data as Listing[];
+  
+  if (error) {
+    console.error("getUserListings error:", error);
+    throw new Error(error.message || "Failed to fetch listings");
+  }
+  
+  return (data || []) as Listing[];
 }
 
 export async function getListing(id: string) {
