@@ -21,6 +21,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useStorageUpload } from "@/hooks/useStorageUpload";
 import { createListing, getProfile, createProfile } from "@/lib/supabase-crud";
+import { Listing } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
@@ -121,13 +122,66 @@ function ListRoomContent() {
   };
 
   const handleSubmit = async () => {
+    if (!user) {
+      setSubmitError("You must be logged in to create a listing");
+      return;
+    }
+
     setIsSubmitting(true);
     setSubmitError("");
-    // Simulate loading for demo
-    setTimeout(() => {
+
+    try {
+      // Debug: Check the current auth state
+      const { supabase } = await import("@/lib/supabase");
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      
+      console.log("Context user.id:", user.id);
+      console.log("Supabase auth.getUser() id:", authUser?.id);
+      
+      if (!authUser) {
+        throw new Error("Not authenticated with Supabase. Please log in again.");
+      }
+
+      // Use the authenticated user's ID from Supabase directly
+      const listingData: Partial<Listing> = {
+        provider_id: authUser.id,
+        title: formData.title,
+        description: formData.description || null,
+        monthly_rent: parseFloat(formData.price) || 0,
+        area: formData.location,
+        room_type: formData.roomType,
+        house_rules: formData.houseRules || null,
+        available_from: formData.availability || null,
+        preferred_tenant_gender: (formData.genderPreference as "male" | "female" | "any") || "any",
+        preferred_tenant_occupation: formData.occupation ? [formData.occupation] : [],
+        wifi: selectedAmenities.includes("wifi"),
+        parking: selectedAmenities.includes("parking"),
+        kitchen_access: selectedAmenities.includes("kitchen"),
+        laundry: selectedAmenities.includes("laundry"),
+        security: selectedAmenities.includes("security"),
+        is_active: true,
+      };
+
+      const listing = await createListing(listingData);
+
+      if (!listing?.id) {
+        throw new Error("Failed to create listing - no ID returned");
+      }
+
+      // Upload photos if any
+      if (uploadedPhotos.length > 0) {
+        for (const photo of uploadedPhotos) {
+          await uploadListing(photo, listing.id);
+        }
+      }
+
+      router.push(`/listing/${listing.id}`);
+    } catch (err: any) {
+      console.error("Error creating listing:", err);
+      setSubmitError(err.message || "Failed to create listing. Please try again.");
+    } finally {
       setIsSubmitting(false);
-      router.push("/listing/1");
-    }, 1000);
+    }
   };
 
   return (
@@ -562,20 +616,22 @@ function ListRoomContent() {
                       </div>
 
                       <div className="grid grid-cols-3 gap-2">
-                        {[
-                          "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80",
-                          "https://images.unsplash.com/photo-1560448075-bb485b067938?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80",
-                          "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
-                        ].map((image, index) => (
-                          <Image
-                            key={index}
-                            src={image}
-                            alt={`Room preview ${index + 1}`}
-                            width={150}
-                            height={100}
-                            className="w-full h-20 object-cover rounded-md"
-                          />
-                        ))}
+                        {photoUrls.length > 0 ? (
+                          photoUrls.slice(0, 3).map((url, index) => (
+                            <Image
+                              key={index}
+                              src={url}
+                              alt={`Room preview ${index + 1}`}
+                              width={150}
+                              height={100}
+                              className="w-full h-20 object-cover rounded-md"
+                            />
+                          ))
+                        ) : (
+                          <div className="col-span-3 text-center text-[#7F8C8D] py-4">
+                            No photos uploaded yet
+                          </div>
+                        )}
                       </div>
                     </CardContent>
                   </Card>

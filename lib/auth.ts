@@ -102,6 +102,14 @@ export async function updatePassword(newPassword: string) {
   if (error) throw error
 }
 
+export async function updateProfile(data: Partial<Omit<SignUpData, 'email' | 'password'>>) {
+  const { error } = await supabase.auth.updateUser({
+    data: data
+  })
+
+  if (error) throw error
+}
+
 // Resend email verification
 export async function resendVerificationEmail(email: string) {
   const { error } = await supabase.auth.resend({

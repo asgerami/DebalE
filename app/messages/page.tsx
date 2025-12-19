@@ -142,19 +142,15 @@ function MessagesContent() {
   const { user } = useAuth();
   const router = useRouter();
 
-  // Replace with actual matchId and userId from your app context
-  const matchId = "REPLACE_WITH_MATCH_ID";
-  const userId = user?.id || "REPLACE_WITH_AUTH_USER_ID";
-  const { messages, loading, error, send } = useMessages(matchId, userId);
-  const [selectedConversation, setSelectedConversation] = useState(
-    mockConversations[0]
-  );
+  const [selectedConversation, setSelectedConversation] = useState<typeof mockConversations[0] | null>(null);
   const [newMessage, setNewMessage] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
 
-  const handleSendMessage = () => {
-    if (newMessage.trim()) {
-      // Handle sending message
+  // For now, use mock data until we implement real messaging
+  // TODO: Integrate with Supabase real-time messaging
+  const handleSendMessage = async () => {
+    if (newMessage.trim() && selectedConversation) {
+      // TODO: Send message via Supabase
       console.log("Sending message:", newMessage);
       setNewMessage("");
     }

@@ -1,5 +1,33 @@
 import { supabase, Profile, Listing, Message } from "./supabase";
 
+// --- Listing Photos ---
+export async function getListingPhotos(listingId: string): Promise<string[]> {
+  const { data, error } = await supabase.storage
+    .from("listing-photos")
+    .list(listingId);
+
+  if (error) {
+    console.error("Error fetching listing photos:", error);
+    return [];
+  }
+
+  if (!data || data.length === 0) {
+    return [];
+  }
+
+  // Get public URLs for each photo
+  const photoUrls = data
+    .filter((file) => file.name !== ".emptyFolderPlaceholder")
+    .map((file) => {
+      const { data: urlData } = supabase.storage
+        .from("listing-photos")
+        .getPublicUrl(`${listingId}/${file.name}`);
+      return urlData.publicUrl;
+    });
+
+  return photoUrls;
+}
+
 // --- Profiles ---
 export async function getProfile(id: string) {
   const { data, error } = await supabase
@@ -15,6 +43,7 @@ export async function createProfile(profile: Partial<Profile>) {
   const { data, error } = await supabase
     .from("profiles")
     .insert([profile])
+    .select()
     .single();
   if (error) throw error;
   return data as Profile;
@@ -25,6 +54,7 @@ export async function updateProfile(id: string, updates: Partial<Profile>) {
     .from("profiles")
     .update(updates)
     .eq("id", id)
+    .select()
     .single();
   if (error) throw error;
   return data as Profile;
@@ -36,6 +66,16 @@ export async function getActiveListings() {
     .from("listings")
     .select("*")
     .eq("is_active", true)
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return data as Listing[];
+}
+
+export async function getUserListings(userId: string) {
+  const { data, error } = await supabase
+    .from("listings")
+    .select("*")
+    .eq("provider_id", userId)
     .order("created_at", { ascending: false });
   if (error) throw error;
   return data as Listing[];
@@ -55,6 +95,7 @@ export async function createListing(listing: Partial<Listing>) {
   const { data, error } = await supabase
     .from("listings")
     .insert([listing])
+    .select()
     .single();
   if (error) throw error;
   return data as Listing;
@@ -65,6 +106,7 @@ export async function updateListing(id: string, updates: Partial<Listing>) {
     .from("listings")
     .update(updates)
     .eq("id", id)
+    .select()
     .single();
   if (error) throw error;
   return data as Listing;
@@ -98,6 +140,7 @@ export async function sendMessage(
   const { data, error } = await supabase
     .from("messages")
     .insert([{ match_id: matchId, sender_id: senderId, content }])
+    .select()
     .single();
   if (error) throw error;
   return data as Message;

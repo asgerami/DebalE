@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { AuthGuard } from "@/components/auth-guard";
 import {
@@ -12,6 +13,26 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { toast } from "sonner";
 import {
   Mail,
   Phone,
@@ -65,6 +86,50 @@ function ProfileContent() {
   const age = user?.user_metadata?.age || "N/A";
   const gender = user?.user_metadata?.gender || "Not specified";
 
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [editFormData, setEditFormData] = useState({
+    full_name: fullName,
+    phone: phone !== "Not specified" ? phone : "",
+    occupation: occupation !== "Not specified" ? occupation : "",
+    current_location: location !== "Not specified" ? location : "",
+    age: age !== "N/A" ? age : "",
+    gender: gender !== "Not specified" ? gender : "",
+    user_type: userType,
+    bio: user?.user_metadata?.bio || "",
+  });
+
+  const { updateProfile } = useAuth();
+
+  useEffect(() => {
+    if (user) {
+      setEditFormData({
+        full_name: user?.user_metadata?.full_name || user?.email?.split('@')[0] || "User",
+        phone: user?.user_metadata?.phone || "",
+        occupation: user?.user_metadata?.occupation || "",
+        current_location: user?.user_metadata?.current_location || "",
+        age: user?.user_metadata?.age || "",
+        gender: user?.user_metadata?.gender || "",
+        user_type: user?.user_metadata?.user_type || "seeker",
+        bio: user?.user_metadata?.bio || "",
+      });
+    }
+  }, [user]);
+
+  const handleUpdateProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsUpdating(true);
+    try {
+      await updateProfile(editFormData);
+      toast.success("Profile updated successfully!");
+      setIsEditDialogOpen(false);
+    } catch (error: any) {
+      toast.error(error.message || "Failed to update profile");
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
   return (
     <div className="flex flex-col min-h-screen">
       <main className="flex-1 max-w-5xl mx-auto w-full px-6 py-12 space-y-12">
@@ -100,9 +165,131 @@ function ProfileContent() {
                   </p>
                 </div>
                 <div className="pb-2">
-                  <Button className="bg-[#F6CB5A] hover:bg-[#E6B84A] text-[#3C2A1E] font-bold h-12 rounded-xl px-8 shadow-md transition-all">
-                    Edit Profile
-                  </Button>
+                  <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button className="bg-[#F6CB5A] hover:bg-[#E6B84A] text-[#3C2A1E] font-bold h-12 rounded-xl px-8 shadow-md transition-all">
+                        Edit Profile
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="bg-white border-[#ECF0F1] rounded-3xl max-w-lg sm:max-w-2xl">
+                      <DialogHeader>
+                        <DialogTitle className="text-2xl font-bold text-[#3C2A1E]">Edit Profile</DialogTitle>
+                        <DialogDescription>
+                          Update your personal information and preferences.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <form onSubmit={handleUpdateProfile} className="space-y-6 py-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div className="space-y-2">
+                            <Label htmlFor="full_name" className="text-sm font-bold text-[#3C2A1E]">Full Name</Label>
+                            <Input
+                              id="full_name"
+                              value={editFormData.full_name}
+                              onChange={(e) => setEditFormData({ ...editFormData, full_name: e.target.value })}
+                              className="bg-white border-[#BDC3C7] text-[#3C2A1E] placeholder:text-[#7F8C8D] rounded-xl focus:ring-[#F6CB5A] focus:border-[#F6CB5A]"
+                              required
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="phone" className="text-sm font-bold text-[#3C2A1E]">Phone Number</Label>
+                            <Input
+                              id="phone"
+                              value={editFormData.phone}
+                              onChange={(e) => setEditFormData({ ...editFormData, phone: e.target.value })}
+                              className="bg-white border-[#BDC3C7] text-[#3C2A1E] placeholder:text-[#7F8C8D] rounded-xl focus:ring-[#F6CB5A] focus:border-[#F6CB5A]"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="occupation" className="text-sm font-bold text-[#3C2A1E]">Occupation</Label>
+                            <Input
+                              id="occupation"
+                              value={editFormData.occupation}
+                              onChange={(e) => setEditFormData({ ...editFormData, occupation: e.target.value })}
+                              className="bg-white border-[#BDC3C7] text-[#3C2A1E] placeholder:text-[#7F8C8D] rounded-xl focus:ring-[#F6CB5A] focus:border-[#F6CB5A]"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="current_location" className="text-sm font-bold text-[#3C2A1E]">Location</Label>
+                            <Input
+                              id="current_location"
+                              value={editFormData.current_location}
+                              onChange={(e) => setEditFormData({ ...editFormData, current_location: e.target.value })}
+                              className="bg-white border-[#BDC3C7] text-[#3C2A1E] placeholder:text-[#7F8C8D] rounded-xl focus:ring-[#F6CB5A] focus:border-[#F6CB5A]"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="age" className="text-sm font-bold text-[#3C2A1E]">Age</Label>
+                            <Input
+                              id="age"
+                              type="number"
+                              value={editFormData.age}
+                              onChange={(e) => setEditFormData({ ...editFormData, age: e.target.value })}
+                              className="bg-white border-[#BDC3C7] text-[#3C2A1E] placeholder:text-[#7F8C8D] rounded-xl focus:ring-[#F6CB5A] focus:border-[#F6CB5A]"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="gender" className="text-sm font-bold text-[#3C2A1E]">Gender</Label>
+                            <Select
+                              value={editFormData.gender}
+                              onValueChange={(value) => setEditFormData({ ...editFormData, gender: value })}
+                            >
+                              <SelectTrigger className="bg-white border-[#BDC3C7] text-[#3C2A1E] rounded-xl focus:ring-[#F6CB5A] focus:border-[#F6CB5A]">
+                                <SelectValue placeholder="Select gender" />
+                              </SelectTrigger>
+                              <SelectContent className="bg-white border-[#ECF0F1] text-[#3C2A1E]">
+                                <SelectItem value="male">Male</SelectItem>
+                                <SelectItem value="female">Female</SelectItem>
+                                <SelectItem value="other">Other</SelectItem>
+                                <SelectItem value="prefernotto">Prefer not to say</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="user_type" className="text-sm font-bold text-[#3C2A1E]">I am a...</Label>
+                            <Select
+                              value={editFormData.user_type}
+                              onValueChange={(value: "seeker" | "provider") => setEditFormData({ ...editFormData, user_type: value })}
+                            >
+                              <SelectTrigger className="bg-white border-[#BDC3C7] text-[#3C2A1E] rounded-xl focus:ring-[#F6CB5A] focus:border-[#F6CB5A]">
+                                <SelectValue placeholder="Select type" />
+                              </SelectTrigger>
+                              <SelectContent className="bg-white border-[#ECF0F1] text-[#3C2A1E]">
+                                <SelectItem value="seeker">Room Seeker</SelectItem>
+                                <SelectItem value="provider">Room Provider</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="md:col-span-2 space-y-2">
+                            <Label htmlFor="bio" className="text-sm font-bold text-[#3C2A1E]">Bio</Label>
+                            <Textarea
+                              id="bio"
+                              value={editFormData.bio}
+                              onChange={(e) => setEditFormData({ ...editFormData, bio: e.target.value })}
+                              placeholder="Tell people about yourself..."
+                              className="bg-white border-[#BDC3C7] text-[#3C2A1E] placeholder:text-[#7F8C8D] rounded-xl focus:ring-[#F6CB5A] focus:border-[#F6CB5A] h-32"
+                            />
+                          </div>
+                        </div>
+                        <DialogFooter className="pt-4">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => setIsEditDialogOpen(false)}
+                            className="rounded-xl border-[#ECF0F1]"
+                          >
+                            Cancel
+                          </Button>
+                          <Button
+                            type="submit"
+                            disabled={isUpdating}
+                            className="bg-[#F6CB5A] hover:bg-[#E6B84A] text-[#3C2A1E] font-bold rounded-xl px-8"
+                          >
+                            {isUpdating ? "Updating..." : "Save Changes"}
+                          </Button>
+                        </DialogFooter>
+                      </form>
+                    </DialogContent>
+                  </Dialog>
                 </div>
               </div>
             </div>

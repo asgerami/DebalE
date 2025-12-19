@@ -12,6 +12,7 @@ import {
   updatePassword,
   resendVerificationEmail,
   isEmailVerified,
+  updateProfile,
 } from "../lib/auth";
 
 interface AuthContextType extends AuthState {
@@ -32,6 +33,7 @@ interface AuthContextType extends AuthState {
   updatePassword: (newPassword: string) => Promise<void>;
   resendVerificationEmail: (email: string) => Promise<void>;
   isEmailVerified: (user: User | null) => boolean;
+  updateProfile: (data: any) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -134,6 +136,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const handleUpdateProfile = async (data: any) => {
+    try {
+      await updateProfile(data);
+    } catch (error) {
+      throw error;
+    }
+  };
+
   const value = {
     user,
     session,
@@ -145,6 +155,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     updatePassword: handleUpdatePassword,
     resendVerificationEmail: handleResendVerificationEmail,
     isEmailVerified,
+    updateProfile: handleUpdateProfile,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

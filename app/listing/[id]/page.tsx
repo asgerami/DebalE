@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -20,83 +21,120 @@ import {
   Phone,
   Mail,
   Camera,
+  Loader2,
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
-import { useListings } from "../../../hooks/useListings";
-
-const mockListing = {
-  id: 1,
-  title: "Cozy Room Near AAU Campus",
-  location: "Sidist Kilo, Addis Ababa",
-  price: 1500,
-  type: "Private Room",
-  rating: 4.8,
-  reviews: 24,
-  images: [
-    "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80",
-    "https://images.unsplash.com/photo-1560448075-bb485b067938?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80",
-    "https://images.unsplash.com/photo-1560448204-603b3fc33ddc?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80",
-    "https://images.unsplash.com/photo-1560448204-5c9c0c0c0c0c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80",
-  ],
-  amenities: [
-    "WiFi",
-    "Kitchen Access",
-    "Parking",
-    "Laundry",
-    "Security",
-    "Study Area",
-  ],
-  roommates: 2,
-  verified: true,
-  featured: true,
-  description:
-    "Perfect for AAU students! This cozy private room is located just 10 minutes walk from the main campus. The house is shared with 2 other friendly students who are respectful and clean. Great study environment with fast WiFi and quiet atmosphere.",
-  houseRules: [
-    "No smoking inside",
-    "Quiet hours: 10 PM - 7 AM",
-    "Clean common areas after use",
-    "Guests allowed with prior notice",
-  ],
-  nearbyPlaces: [
-    { name: "Addis Ababa University", distance: "10 min walk" },
-    { name: "Sidist Kilo Market", distance: "5 min walk" },
-    { name: "Bus Station", distance: "3 min walk" },
-    { name: "Pharmacy", distance: "2 min walk" },
-  ],
-  provider: {
-    name: "Meron Tadesse",
-    rating: 4.9,
-    reviews: 15,
-    verified: true,
-    responseTime: "Usually responds within 2 hours",
-    languages: ["Amharic", "English"],
-    memberSince: "2023",
-  },
-  currentRoommates: [
-    {
-      name: "Sara",
-      age: 22,
-      occupation: "Engineering Student",
-      interests: ["Reading", "Coffee"],
-    },
-    {
-      name: "Daniel",
-      age: 24,
-      occupation: "Computer Science Student",
-      interests: ["Gaming", "Music"],
-    },
-  ],
-};
-
+import { getListing, getListingPhotos, getProfile } from "@/lib/supabase-crud";
+import { Listing, Profile } from "@/lib/supabase";
 import Header from "@/components/header";
 
+// Placeholder image for when no photos are available
+const PLACEHOLDER_IMAGE = "/placeholder.svg";
+
 export default function ListingDetailPage() {
-  // Example usage of the listings hook
-  const { listings, loading, error, addListing, editListing } = useListings();
+  const params = useParams();
+  const listingId = params.id as string;
+
+  const [listing, setListing] = useState<Listing | null>(null);
+  const [photos, setPhotos] = useState<string[]>([]);
+  const [provider, setProvider] = useState<Profile | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [message, setMessage] = useState("");
   const [showContactForm, setShowContactForm] = useState(false);
+
+  useEffect(() => {
+    async function fetchListingData() {
+      if (!listingId) return;
+
+      setLoading(true);
+      setError(null);
+
+      try {
+        // Fetch listing details
+        const listingData = await getListing(listingId);
+        setListing(listingData);
+
+        // Fetch photos from storage
+        const photoUrls = await getListingPhotos(listingId);
+        setPhotos(photoUrls);
+
+        // Fetch provider profile
+        if (listingData?.provider_id) {
+          try {
+            const providerData = await getProfile(listingData.provider_id);
+            setProvider(providerData);
+          } catch (err) {
+            console.error("Error fetching provider:", err);
+          }
+        }
+      } catch (err: any) {
+        console.error("Error fetching listing:", err);
+        setError(err.message || "Failed to load listing");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchListingData();
+  }, [listingId]);
+
+  // Build amenities list from listing data
+  const getAmenities = () => {
+    if (!listing) return [];
+    const amenities: string[] = [];
+    if (listing.wifi) amenities.push("WiFi");
+    if (listing.kitchen_access) amenities.push("Kitchen Access");
+    if (listing.parking) amenities.push("Parking");
+    if (listing.laundry) amenities.push("Laundry");
+    if (listing.security) amenities.push("Security");
+    if (listing.private_bathroom) amenities.push("Private Bathroom");
+    if (listing.furnished) amenities.push("Furnished");
+    return amenities;
+  };
+
+  // Parse house rules from string
+  const getHouseRules = () => {
+    if (!listing?.house_rules) return [];
+    return listing.house_rules.split("\n").filter((rule) => rule.trim());
+  };
+
+  // Get images to display (use photos from storage or placeholder)
+  const displayImages = photos.length > 0 ? photos : [PLACEHOLDER_IMAGE];
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#FFFEF7] flex flex-col">
+        <Header />
+        <div className="flex-1 flex items-center justify-center">
+          <Loader2 className="w-8 h-8 animate-spin text-[#F6CB5A]" />
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !listing) {
+    return (
+      <div className="min-h-screen bg-[#FFFEF7] flex flex-col">
+        <Header />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <h2 className="text-xl font-bold text-[#3C2A1E] mb-2">
+              {error || "Listing not found"}
+            </h2>
+            <Link href="/search" className="text-[#F6CB5A] hover:underline">
+              Back to Search
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const amenities = getAmenities();
+  const houseRules = getHouseRules();
 
   return (
     <div className="min-h-screen bg-[#FFFEF7] flex flex-col">
@@ -137,49 +175,52 @@ export default function ListingDetailPage() {
             <div className="space-y-4">
               <div className="relative">
                 <Image
-                  src={
-                    mockListing.images[currentImageIndex] || "/placeholder.svg"
-                  }
-                  alt={mockListing.title}
+                  src={displayImages[currentImageIndex] || PLACEHOLDER_IMAGE}
+                  alt={listing.title}
                   width={600}
                   height={400}
                   className="w-full h-96 object-cover rounded-xl"
                 />
-                {mockListing.featured && (
+                {listing.featured && (
                   <Badge className="absolute top-4 left-4 bg-[#F6CB5A] text-[#3C2A1E] px-3 py-1">
                     Featured
                   </Badge>
                 )}
-                {mockListing.verified && (
+                {provider?.phone_verified && (
                   <div className="absolute top-4 right-4 bg-[#2ECC71] text-white px-3 py-1 rounded-md text-sm flex items-center">
                     <Shield className="w-4 h-4 mr-1" />
                     Verified
                   </div>
                 )}
-                <div className="absolute bottom-4 right-4 bg-black/50 text-white px-3 py-1 rounded-md text-sm flex items-center">
-                  <Camera className="w-4 h-4 mr-1" />
-                  {currentImageIndex + 1} / {mockListing.images.length}
-                </div>
+                {displayImages.length > 0 && displayImages[0] !== PLACEHOLDER_IMAGE && (
+                  <div className="absolute bottom-4 right-4 bg-black/50 text-white px-3 py-1 rounded-md text-sm flex items-center">
+                    <Camera className="w-4 h-4 mr-1" />
+                    {currentImageIndex + 1} / {displayImages.length}
+                  </div>
+                )}
               </div>
 
-              <div className="grid grid-cols-4 gap-2">
-                {mockListing.images.map((image, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setCurrentImageIndex(index)}
-                    className={`relative rounded-lg overflow-hidden ${currentImageIndex === index ? "ring-2 ring-[#F6CB5A]" : ""
+              {displayImages.length > 1 && (
+                <div className="grid grid-cols-4 gap-2">
+                  {displayImages.map((image, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setCurrentImageIndex(index)}
+                      className={`relative rounded-lg overflow-hidden ${
+                        currentImageIndex === index ? "ring-2 ring-[#F6CB5A]" : ""
                       }`}
-                  >
-                    <Image
-                      src={image || "/placeholder.svg"}
-                      alt={`Room view ${index + 1}`}
-                      width={150}
-                      height={100}
-                      className="w-full h-20 object-cover"
-                    />
-                  </button>
-                ))}
-              </div>
+                    >
+                      <Image
+                        src={image || PLACEHOLDER_IMAGE}
+                        alt={`Room view ${index + 1}`}
+                        width={150}
+                        height={100}
+                        className="w-full h-20 object-cover"
+                      />
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Listing Details */}
@@ -188,129 +229,92 @@ export default function ListingDetailPage() {
                 <div className="flex items-start justify-between mb-4">
                   <div>
                     <h1 className="text-3xl font-bold text-[#3C2A1E] mb-2">
-                      {mockListing.title}
+                      {listing.title}
                     </h1>
                     <div className="flex items-center text-[#7F8C8D] mb-2">
                       <MapPin className="w-5 h-5 mr-2" />
-                      {mockListing.location}
+                      {listing.area}
+                      {listing.neighborhood && `, ${listing.neighborhood}`}
                     </div>
                     <div className="flex items-center space-x-4 text-sm text-[#7F8C8D]">
                       <div className="flex items-center">
                         <BedDouble className="w-4 h-4 mr-1" />
-                        {mockListing.type}
+                        {listing.room_type || "Room"}
                       </div>
                       <div className="flex items-center">
                         <Users className="w-4 h-4 mr-1" />
-                        {mockListing.roommates} current roommates
-                      </div>
-                      <div className="flex items-center">
-                        <Star className="w-4 h-4 mr-1 fill-[#F6CB5A] text-[#F6CB5A]" />
-                        {mockListing.rating} ({mockListing.reviews} reviews)
+                        {listing.current_roommates} current roommates
                       </div>
                     </div>
                   </div>
                   <div className="text-right">
                     <div className="text-3xl font-bold text-[#F6CB5A]">
-                      {mockListing.price} Birr
+                      {listing.monthly_rent} Birr
                     </div>
                     <div className="text-sm text-[#7F8C8D]">per month</div>
                   </div>
                 </div>
 
                 <p className="text-[#3C2A1E] leading-relaxed">
-                  {mockListing.description}
+                  {listing.description || "No description provided."}
                 </p>
               </div>
 
               {/* Amenities */}
-              <div>
-                <h2 className="text-xl font-bold text-[#3C2A1E] mb-4">
-                  Amenities
-                </h2>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                  {mockListing.amenities.map((amenity, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center space-x-2 text-[#3C2A1E]"
-                    >
-                      <CheckCircle className="w-5 h-5 text-[#2ECC71]" />
-                      <span>{amenity}</span>
-                    </div>
-                  ))}
+              {amenities.length > 0 && (
+                <div>
+                  <h2 className="text-xl font-bold text-[#3C2A1E] mb-4">
+                    Amenities
+                  </h2>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    {amenities.map((amenity, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center space-x-2 text-[#3C2A1E]"
+                      >
+                        <CheckCircle className="w-5 h-5 text-[#2ECC71]" />
+                        <span>{amenity}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* House Rules */}
-              <div>
-                <h2 className="text-xl font-bold text-[#3C2A1E] mb-4">
-                  House Rules
-                </h2>
-                <div className="space-y-2">
-                  {mockListing.houseRules.map((rule, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center space-x-2 text-[#3C2A1E]"
-                    >
-                      <div className="w-2 h-2 bg-[#F6CB5A] rounded-full"></div>
-                      <span>{rule}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Current Roommates */}
-              <div>
-                <h2 className="text-xl font-bold text-[#3C2A1E] mb-4">
-                  Current Roommates
-                </h2>
-                <div className="grid md:grid-cols-2 gap-4">
-                  {mockListing.currentRoommates.map((roommate, index) => (
-                    <Card
-                      key={index}
-                      className="bg-[#FDF8F0] border border-[#ECF0F1] rounded-xl p-4"
-                    >
-                      <div className="flex items-center space-x-3">
-                        <div className="w-12 h-12 bg-[#F6CB5A] rounded-full flex items-center justify-center">
-                          <span className="text-[#3C2A1E] font-bold">
-                            {roommate.name[0]}
-                          </span>
-                        </div>
-                        <div>
-                          <div className="font-semibold text-[#3C2A1E]">
-                            {roommate.name}, {roommate.age}
-                          </div>
-                          <div className="text-sm text-[#7F8C8D]">
-                            {roommate.occupation}
-                          </div>
-                          <div className="text-xs text-[#7F8C8D]">
-                            Interests: {roommate.interests.join(", ")}
-                          </div>
-                        </div>
+              {houseRules.length > 0 && (
+                <div>
+                  <h2 className="text-xl font-bold text-[#3C2A1E] mb-4">
+                    House Rules
+                  </h2>
+                  <div className="space-y-2">
+                    {houseRules.map((rule, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center space-x-2 text-[#3C2A1E]"
+                      >
+                        <div className="w-2 h-2 bg-[#F6CB5A] rounded-full"></div>
+                        <span>{rule}</span>
                       </div>
-                    </Card>
-                  ))}
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
 
-              {/* Nearby Places */}
-              <div>
-                <h2 className="text-xl font-bold text-[#3C2A1E] mb-4">
-                  Nearby Places
-                </h2>
-                <div className="grid md:grid-cols-2 gap-3">
-                  {mockListing.nearbyPlaces.map((place, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center justify-between p-3 bg-[#FDF8F0] rounded-lg"
-                    >
-                      <span className="text-[#3C2A1E]">{place.name}</span>
-                      <span className="text-sm text-[#7F8C8D]">
-                        {place.distance}
-                      </span>
-                    </div>
-                  ))}
+              {/* Availability Info */}
+              {listing.available_from && (
+                <div>
+                  <h2 className="text-xl font-bold text-[#3C2A1E] mb-4">
+                    Availability
+                  </h2>
+                  <div className="flex items-center space-x-2 text-[#3C2A1E]">
+                    <Calendar className="w-5 h-5 text-[#F6CB5A]" />
+                    <span>
+                      Available from{" "}
+                      {new Date(listing.available_from).toLocaleDateString()}
+                    </span>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
 
@@ -322,34 +326,49 @@ export default function ListingDetailPage() {
                 {/* Provider Info */}
                 <div className="space-y-4">
                   <div className="flex items-center space-x-3">
-                    <div className="w-12 h-12 bg-[#F6CB5A] rounded-full flex items-center justify-center">
-                      <span className="text-[#3C2A1E] font-bold">
-                        {mockListing.provider.name[0]}
-                      </span>
+                    <div className="w-12 h-12 bg-[#F6CB5A] rounded-full flex items-center justify-center overflow-hidden">
+                      {provider?.avatar_url ? (
+                        <Image
+                          src={provider.avatar_url}
+                          alt={provider.full_name || "Provider"}
+                          width={48}
+                          height={48}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <span className="text-[#3C2A1E] font-bold">
+                          {provider?.full_name?.[0] || "?"}
+                        </span>
+                      )}
                     </div>
                     <div>
                       <div className="font-semibold text-[#3C2A1E]">
-                        {mockListing.provider.name}
+                        {provider?.full_name || "Provider"}
                       </div>
                       <div className="flex items-center space-x-2">
-                        <Star className="w-4 h-4 fill-[#F6CB5A] text-[#F6CB5A]" />
-                        <span className="text-sm text-[#7F8C8D]">
-                          {mockListing.provider.rating} (
-                          {mockListing.provider.reviews} reviews)
-                        </span>
-                        {mockListing.provider.verified && (
+                        {provider?.phone_verified && (
                           <Shield className="w-4 h-4 text-[#2ECC71]" />
                         )}
+                        <span className="text-sm text-[#7F8C8D]">
+                          {provider?.phone_verified ? "Verified" : ""}
+                        </span>
                       </div>
                     </div>
                   </div>
 
                   <div className="space-y-2 text-sm text-[#7F8C8D]">
-                    <div>Member since {mockListing.provider.memberSince}</div>
-                    <div>{mockListing.provider.responseTime}</div>
-                    <div>
-                      Languages: {mockListing.provider.languages.join(", ")}
-                    </div>
+                    {provider?.created_at && (
+                      <div>
+                        Member since{" "}
+                        {new Date(provider.created_at).getFullYear()}
+                      </div>
+                    )}
+                    {provider?.languages && provider.languages.length > 0 && (
+                      <div>Languages: {provider.languages.join(", ")}</div>
+                    )}
+                    {provider?.occupation && (
+                      <div>Occupation: {provider.occupation}</div>
+                    )}
                   </div>
                 </div>
 
