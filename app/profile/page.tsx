@@ -3,15 +3,8 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { AuthGuard } from "@/components/auth-guard";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Dialog,
@@ -36,106 +29,72 @@ import { toast } from "sonner";
 import {
   Mail,
   Phone,
-  User,
-  Home,
-  Shield,
-  BedDouble,
   MapPin,
-  Search,
-  MessageSquare,
-  ChevronRight,
-  Sparkles,
-  Calendar,
   Briefcase,
-  Smartphone,
-  ShieldCheck,
+  Calendar,
+  User,
+  Shield,
   Camera,
+  Edit3,
+  CheckCircle,
+  Clock,
+  ArrowLeft,
+  Home,
+  MessageSquare,
+  Settings,
 } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
 import Header from "@/components/header";
+import { supabase } from "@/lib/supabase";
 
 export default function ProfilePage() {
   return (
     <AuthGuard>
-      <div className="min-h-screen bg-[#FFFEF7] font-sans selection:bg-[#F6CB5A]/30 flex flex-col">
-        <Header />
-        <ProfileContent />
-      </div>
+      <ProfileContent />
     </AuthGuard>
   );
 }
 
 function ProfileContent() {
-  const { user } = useAuth();
-
-  const getUserInitials = (name: string) => {
-    if (!name) return "U";
-    return name
-      .split(" ")
-      .map((word) => word[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2);
-  };
-
-  const fullName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || "User";
-  const userType = user?.user_metadata?.user_type || "seeker";
-  const location = user?.user_metadata?.current_location || "Not specified";
-  const phone = user?.user_metadata?.phone || "Not specified";
-  const occupation = user?.user_metadata?.occupation || "Not specified";
-  const age = user?.user_metadata?.age || "N/A";
-  const gender = user?.user_metadata?.gender || "Not specified";
-
+  const { user, updateProfile } = useAuth();
+  const [profile, setProfile] = useState<any>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+
+  const fullName = user?.user_metadata?.full_name || user?.email?.split("@")[0] || "User";
+  const userType = user?.user_metadata?.user_type || "seeker";
+  const location = user?.user_metadata?.current_location || "Not set";
+  const phone = user?.user_metadata?.phone || "Not set";
+  const occupation = user?.user_metadata?.occupation || "Not set";
+  const age = user?.user_metadata?.age || "—";
+  const gender = user?.user_metadata?.gender || "Not set";
+  const bio = user?.user_metadata?.bio || "";
+
   const [editFormData, setEditFormData] = useState({
     full_name: fullName,
-    phone: phone !== "Not specified" ? phone : "",
-    occupation: occupation !== "Not specified" ? occupation : "",
-    current_location: location !== "Not specified" ? location : "",
-    age: age !== "N/A" ? age : "",
-    gender: gender !== "Not specified" ? gender : "",
+    phone: phone !== "Not set" ? phone : "",
+    occupation: occupation !== "Not set" ? occupation : "",
+    current_location: location !== "Not set" ? location : "",
+    age: age !== "—" ? age : "",
+    gender: gender !== "Not set" ? gender : "",
     user_type: userType,
-    bio: user?.user_metadata?.bio || "",
+    bio: bio,
   });
 
-  const { updateProfile } = useAuth();
-
-  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !user) return;
-
-    setIsUploadingAvatar(true);
-    try {
-      const { uploadProfilePhoto } = await import("@/lib/supabase-crud");
-      const { supabase } = await import("@/lib/supabase");
-      
-      // Upload photo
-      const result = await uploadProfilePhoto(file, user.id);
-      
-      // Get public URL
-      const { data: urlData } = supabase.storage
-        .from("profile-photos")
-        .getPublicUrl(result.path);
-      
-      // Update user metadata with avatar URL
-      await updateProfile({ avatar_url: urlData.publicUrl });
-      
-      toast.success("Profile photo updated successfully!");
-    } catch (error: any) {
-      console.error("Error uploading avatar:", error);
-      toast.error(error.message || "Failed to upload photo");
-    } finally {
-      setIsUploadingAvatar(false);
+  useEffect(() => {
+    async function fetchProfile() {
+      if (!user) return;
+      const { data } = await supabase.from("profiles").select("*").eq("id", user.id).single();
+      setProfile(data);
     }
-  };
+    fetchProfile();
+  }, [user]);
 
   useEffect(() => {
     if (user) {
       setEditFormData({
-        full_name: user?.user_metadata?.full_name || user?.email?.split('@')[0] || "User",
+        full_name: user?.user_metadata?.full_name || "",
         phone: user?.user_metadata?.phone || "",
         occupation: user?.user_metadata?.occupation || "",
         current_location: user?.user_metadata?.current_location || "",
@@ -147,291 +106,438 @@ function ProfileContent() {
     }
   }, [user]);
 
+  const getUserInitials = (name: string) => {
+    if (!name) return "U";
+    return name.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2);
+  };
+
+  const isVerified = profile?.phone_verified === true;
+  const verificationPending = user?.user_metadata?.verification_status === "pending" && !isVerified;
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+    setIsUploadingAvatar(true);
+    try {
+      const { uploadProfilePhoto } = await import("@/lib/supabase-crud");
+      const result = await uploadProfilePhoto(file, user.id);
+      const { data: urlData } = supabase.storage.from("profile-photos").getPublicUrl(result.path);
+      await updateProfile({ avatar_url: urlData.publicUrl });
+      toast.success("Photo updated!");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to upload");
+    } finally {
+      setIsUploadingAvatar(false);
+    }
+  };
+
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsUpdating(true);
     try {
       await updateProfile(editFormData);
-      toast.success("Profile updated successfully!");
+      toast.success("Profile updated!");
       setIsEditDialogOpen(false);
     } catch (error: any) {
-      toast.error(error.message || "Failed to update profile");
+      toast.error(error.message || "Failed to update");
     } finally {
       setIsUpdating(false);
     }
   };
 
+  const infoItems = [
+    { icon: Mail, label: "Email", value: user?.email || "—" },
+    { icon: Phone, label: "Phone", value: phone },
+    { icon: Briefcase, label: "Work", value: occupation },
+    { icon: MapPin, label: "Location", value: location },
+    { icon: Calendar, label: "Age", value: age },
+    { icon: User, label: "Gender", value: gender },
+  ];
+
   return (
-    <div className="flex flex-col min-h-screen">
-      <main className="flex-1 max-w-5xl mx-auto w-full px-6 py-12 space-y-12">
-        {/* Profile Header Card */}
-        <div className="relative group">
-          <Card className="relative bg-white border border-[#ECF0F1] rounded-[32px] shadow-lg overflow-hidden">
-            <div className="h-48 bg-[#3C2A1E] relative overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-r from-[#3C2A1E] via-[#F6CB5A]/10 to-[#3C2A1E]" />
-              <div className="absolute top-0 right-0 p-8">
-                <Badge className="bg-[#FDF8F0] text-[#F6CB5A] font-bold px-4 py-1.5 rounded-full border border-[#F6CB5A]/20">
-                  {userType === "seeker" ? "ROOM SEEKER" : "ROOM PROVIDER"}
-                </Badge>
-              </div>
+    <>
+      {/* MOBILE LAYOUT */}
+      <div className="lg:hidden min-h-screen bg-[#FFFEF7]">
+        {/* Mobile Header with gradient */}
+        <div className="relative">
+          <div className="h-32 bg-gradient-to-br from-[#3C2A1E] via-[#4A3728] to-[#3C2A1E]" />
+          
+          {/* Back button */}
+          <Link href="/dashboard" className="absolute top-4 left-4 p-2 bg-white/10 backdrop-blur-sm rounded-full">
+            <ArrowLeft className="w-5 h-5 text-white" />
+          </Link>
+          
+          {/* Settings */}
+          <button className="absolute top-4 right-4 p-2 bg-white/10 backdrop-blur-sm rounded-full">
+            <Settings className="w-5 h-5 text-white" />
+          </button>
+
+          {/* Avatar - overlapping */}
+          <div className="absolute -bottom-14 left-1/2 -translate-x-1/2">
+            <div className="relative">
+              <Avatar className="h-28 w-28 border-4 border-[#FFFEF7] shadow-xl">
+                <AvatarImage src={user?.user_metadata?.avatar_url} />
+                <AvatarFallback className="bg-[#F6CB5A] text-[#3C2A1E] text-2xl font-bold">
+                  {getUserInitials(fullName)}
+                </AvatarFallback>
+              </Avatar>
+              <label className="absolute bottom-1 right-1 bg-[#F6CB5A] p-2 rounded-full cursor-pointer shadow-lg hover:scale-105 transition-transform">
+                <Camera className="w-4 h-4 text-[#3C2A1E]" />
+                <input type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} />
+              </label>
             </div>
-            <div className="px-10 pb-12 -mt-20 relative">
-              <div className="flex flex-col md:flex-row md:items-end gap-8 text-center md:text-left">
-                <div className="relative mx-auto md:mx-0">
-                  <Avatar className="h-40 w-40 border-8 border-white shadow-2xl">
-                    <AvatarImage src={user?.user_metadata?.avatar_url} />
-                    <AvatarFallback className="bg-[#F6CB5A] text-[#3C2A1E] text-5xl font-bold">
-                      {getUserInitials(fullName)}
-                    </AvatarFallback>
-                  </Avatar>
-                  <label
-                    htmlFor="avatar-upload"
-                    className="absolute bottom-2 right-2 bg-[#F6CB5A] hover:bg-[#E6B84A] text-[#3C2A1E] p-3 rounded-full cursor-pointer shadow-lg transition-all"
-                  >
-                    <Camera className="w-5 h-5" />
-                    <input
-                      id="avatar-upload"
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={handleAvatarUpload}
+          </div>
+        </div>
+
+        {/* Mobile Content */}
+        <div className="pt-16 px-5 pb-8">
+          {/* Name & Badge */}
+          <div className="text-center mb-6">
+            <h1 className="text-2xl font-bold text-[#3C2A1E]">{fullName}</h1>
+            <p className="text-[#7F8C8D] text-sm mt-1">{userType === "provider" ? "Room Provider" : "Room Seeker"}</p>
+            <div className="flex justify-center mt-3">
+              <VerificationBadge isVerified={isVerified} isPending={verificationPending} />
+            </div>
+          </div>
+
+          {/* Quick Stats */}
+          <div className="flex justify-center gap-8 py-4 border-y border-[#ECF0F1] mb-6">
+            <Link href="/my-listings" className="text-center">
+              <p className="text-xl font-bold text-[#3C2A1E]">—</p>
+              <p className="text-xs text-[#7F8C8D]">Listings</p>
+            </Link>
+            <Link href="/messages" className="text-center">
+              <p className="text-xl font-bold text-[#3C2A1E]">—</p>
+              <p className="text-xs text-[#7F8C8D]">Messages</p>
+            </Link>
+            <div className="text-center">
+              <p className="text-xl font-bold text-[#3C2A1E]">{new Date(user?.created_at || "").getFullYear() || "—"}</p>
+              <p className="text-xs text-[#7F8C8D]">Joined</p>
+            </div>
+          </div>
+
+          {/* Info List - Mobile */}
+          <div className="space-y-3 mb-6">
+            {infoItems.map((item, i) => (
+              <div key={i} className="flex items-center gap-3 py-3 border-b border-[#ECF0F1] last:border-0">
+                <div className="w-10 h-10 rounded-xl bg-[#FDF8F0] flex items-center justify-center flex-shrink-0">
+                  <item.icon className="w-5 h-5 text-[#F6CB5A]" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs text-[#7F8C8D]">{item.label}</p>
+                  <p className="text-[#3C2A1E] font-medium truncate">{item.value}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Bio - Mobile */}
+          {bio && (
+            <div className="bg-[#FDF8F0] rounded-2xl p-4 mb-6">
+              <p className="text-xs text-[#7F8C8D] mb-2">About me</p>
+              <p className="text-[#3C2A1E] text-sm leading-relaxed">{bio}</p>
+            </div>
+          )}
+
+          {/* Actions - Mobile */}
+          <div className="space-y-3">
+            <EditProfileDialog
+              isOpen={isEditDialogOpen}
+              setIsOpen={setIsEditDialogOpen}
+              formData={editFormData}
+              setFormData={setEditFormData}
+              onSubmit={handleUpdateProfile}
+              isUpdating={isUpdating}
+            />
+            
+            {!isVerified && !verificationPending && (
+              <Link href="/verify" className="block">
+                <Button variant="outline" className="w-full h-12 rounded-xl border-2 border-[#3C2A1E] text-[#3C2A1E] font-semibold">
+                  <Shield className="w-4 h-4 mr-2" />
+                  Verify Identity
+                </Button>
+              </Link>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* DESKTOP LAYOUT */}
+      <div className="hidden lg:block min-h-screen bg-gradient-to-br from-[#FFFEF7] to-[#FDF8F0]">
+        <Header />
+        
+        <div className="max-w-5xl mx-auto px-8 py-10">
+          <div className="grid grid-cols-3 gap-8">
+            {/* Left Column - Profile Card */}
+            <div className="col-span-1">
+              <div className="bg-white rounded-3xl shadow-sm border border-[#ECF0F1] overflow-hidden sticky top-8">
+                {/* Card Header */}
+                <div className="h-24 bg-gradient-to-r from-[#3C2A1E] to-[#4A3728] relative">
+                  <div className="absolute -bottom-12 left-1/2 -translate-x-1/2">
+                    <div className="relative">
+                      <Avatar className="h-24 w-24 border-4 border-white shadow-lg">
+                        <AvatarImage src={user?.user_metadata?.avatar_url} />
+                        <AvatarFallback className="bg-[#F6CB5A] text-[#3C2A1E] text-2xl font-bold">
+                          {getUserInitials(fullName)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <label className="absolute bottom-0 right-0 bg-[#F6CB5A] p-2 rounded-full cursor-pointer shadow-md hover:scale-110 transition-transform">
+                        <Camera className="w-4 h-4 text-[#3C2A1E]" />
+                        <input type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} />
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Card Body */}
+                <div className="pt-14 pb-6 px-6 text-center">
+                  <h2 className="text-xl font-bold text-[#3C2A1E]">{fullName}</h2>
+                  <p className="text-[#7F8C8D] text-sm">{userType === "provider" ? "Room Provider" : "Room Seeker"}</p>
+                  
+                  <div className="flex justify-center mt-3 mb-4">
+                    <VerificationBadge isVerified={isVerified} isPending={verificationPending} />
+                  </div>
+
+                  <div className="flex items-center justify-center gap-1 text-[#7F8C8D] text-sm">
+                    <MapPin className="w-4 h-4" />
+                    <span>{location}</span>
+                  </div>
+
+                  <div className="mt-6 pt-6 border-t border-[#ECF0F1]">
+                    <EditProfileDialog
+                      isOpen={isEditDialogOpen}
+                      setIsOpen={setIsEditDialogOpen}
+                      formData={editFormData}
+                      setFormData={setEditFormData}
+                      onSubmit={handleUpdateProfile}
+                      isUpdating={isUpdating}
                     />
-                  </label>
-                </div>
-                <div className="flex-1 pb-2">
-                  <div className="flex items-center justify-center md:justify-start space-x-3 mb-2">
-                    <h1 className="text-4xl font-bold text-[#3C2A1E]">{fullName}</h1>
-                    {user?.user_metadata?.id_verified ? (
-                      <Badge className="bg-green-50 text-green-600 border-green-100 px-3 py-1 text-xs">
-                        <Shield className="w-3 h-3 mr-1" />
-                        ID Verified
-                      </Badge>
-                    ) : user?.user_metadata?.verification_status === "pending" ? (
-                      <Badge className="bg-yellow-50 text-yellow-600 border-yellow-100 px-3 py-1 text-xs">
-                        Verification Pending
-                      </Badge>
-                    ) : (
-                      <Link href="/verify">
-                        <Badge className="bg-gray-50 text-gray-600 border-gray-200 px-3 py-1 text-xs cursor-pointer hover:bg-gray-100">
-                          Get Verified
-                        </Badge>
-                      </Link>
-                    )}
                   </div>
-                  <p className="text-lg font-medium text-[#7F8C8D] flex items-center justify-center md:justify-start">
-                    <MapPin className="w-4 h-4 mr-2 text-[#F6CB5A]" />
-                    {location}
-                  </p>
-                </div>
-                <div className="pb-2">
-                  <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-                    <DialogTrigger asChild>
-                      <Button className="bg-[#F6CB5A] hover:bg-[#E6B84A] text-[#3C2A1E] font-bold h-12 rounded-xl px-8 shadow-md transition-all">
-                        Edit Profile
+
+                  {!isVerified && !verificationPending && (
+                    <Link href="/verify" className="block mt-3">
+                      <Button variant="ghost" className="w-full text-[#7F8C8D] hover:text-[#3C2A1E]">
+                        <Shield className="w-4 h-4 mr-2" />
+                        Get Verified
                       </Button>
-                    </DialogTrigger>
-                    <DialogContent className="bg-white border-[#ECF0F1] rounded-3xl max-w-lg sm:max-w-2xl">
-                      <DialogHeader>
-                        <DialogTitle className="text-2xl font-bold text-[#3C2A1E]">Edit Profile</DialogTitle>
-                        <DialogDescription>
-                          Update your personal information and preferences.
-                        </DialogDescription>
-                      </DialogHeader>
-                      <form onSubmit={handleUpdateProfile} className="space-y-6 py-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          <div className="space-y-2">
-                            <Label htmlFor="full_name" className="text-sm font-bold text-[#3C2A1E]">Full Name</Label>
-                            <Input
-                              id="full_name"
-                              value={editFormData.full_name}
-                              onChange={(e) => setEditFormData({ ...editFormData, full_name: e.target.value })}
-                              className="bg-white border-[#BDC3C7] text-[#3C2A1E] placeholder:text-[#7F8C8D] rounded-xl focus:ring-[#F6CB5A] focus:border-[#F6CB5A]"
-                              required
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="phone" className="text-sm font-bold text-[#3C2A1E]">Phone Number</Label>
-                            <Input
-                              id="phone"
-                              value={editFormData.phone}
-                              onChange={(e) => setEditFormData({ ...editFormData, phone: e.target.value })}
-                              className="bg-white border-[#BDC3C7] text-[#3C2A1E] placeholder:text-[#7F8C8D] rounded-xl focus:ring-[#F6CB5A] focus:border-[#F6CB5A]"
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="occupation" className="text-sm font-bold text-[#3C2A1E]">Occupation</Label>
-                            <Input
-                              id="occupation"
-                              value={editFormData.occupation}
-                              onChange={(e) => setEditFormData({ ...editFormData, occupation: e.target.value })}
-                              className="bg-white border-[#BDC3C7] text-[#3C2A1E] placeholder:text-[#7F8C8D] rounded-xl focus:ring-[#F6CB5A] focus:border-[#F6CB5A]"
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="current_location" className="text-sm font-bold text-[#3C2A1E]">Location</Label>
-                            <Input
-                              id="current_location"
-                              value={editFormData.current_location}
-                              onChange={(e) => setEditFormData({ ...editFormData, current_location: e.target.value })}
-                              className="bg-white border-[#BDC3C7] text-[#3C2A1E] placeholder:text-[#7F8C8D] rounded-xl focus:ring-[#F6CB5A] focus:border-[#F6CB5A]"
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="age" className="text-sm font-bold text-[#3C2A1E]">Age</Label>
-                            <Input
-                              id="age"
-                              type="number"
-                              value={editFormData.age}
-                              onChange={(e) => setEditFormData({ ...editFormData, age: e.target.value })}
-                              className="bg-white border-[#BDC3C7] text-[#3C2A1E] placeholder:text-[#7F8C8D] rounded-xl focus:ring-[#F6CB5A] focus:border-[#F6CB5A]"
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="gender" className="text-sm font-bold text-[#3C2A1E]">Gender</Label>
-                            <Select
-                              value={editFormData.gender}
-                              onValueChange={(value) => setEditFormData({ ...editFormData, gender: value })}
-                            >
-                              <SelectTrigger className="bg-white border-[#BDC3C7] text-[#3C2A1E] rounded-xl focus:ring-[#F6CB5A] focus:border-[#F6CB5A]">
-                                <SelectValue placeholder="Select gender" />
-                              </SelectTrigger>
-                              <SelectContent className="bg-white border-[#ECF0F1] text-[#3C2A1E]">
-                                <SelectItem value="male">Male</SelectItem>
-                                <SelectItem value="female">Female</SelectItem>
-                                <SelectItem value="other">Other</SelectItem>
-                                <SelectItem value="prefernotto">Prefer not to say</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="user_type" className="text-sm font-bold text-[#3C2A1E]">I am a...</Label>
-                            <Select
-                              value={editFormData.user_type}
-                              onValueChange={(value: "seeker" | "provider") => setEditFormData({ ...editFormData, user_type: value })}
-                            >
-                              <SelectTrigger className="bg-white border-[#BDC3C7] text-[#3C2A1E] rounded-xl focus:ring-[#F6CB5A] focus:border-[#F6CB5A]">
-                                <SelectValue placeholder="Select type" />
-                              </SelectTrigger>
-                              <SelectContent className="bg-white border-[#ECF0F1] text-[#3C2A1E]">
-                                <SelectItem value="seeker">Room Seeker</SelectItem>
-                                <SelectItem value="provider">Room Provider</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          <div className="md:col-span-2 space-y-2">
-                            <Label htmlFor="bio" className="text-sm font-bold text-[#3C2A1E]">Bio</Label>
-                            <Textarea
-                              id="bio"
-                              value={editFormData.bio}
-                              onChange={(e) => setEditFormData({ ...editFormData, bio: e.target.value })}
-                              placeholder="Tell people about yourself..."
-                              className="bg-white border-[#BDC3C7] text-[#3C2A1E] placeholder:text-[#7F8C8D] rounded-xl focus:ring-[#F6CB5A] focus:border-[#F6CB5A] h-32"
-                            />
-                          </div>
-                        </div>
-                        <DialogFooter className="pt-4">
-                          <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => setIsEditDialogOpen(false)}
-                            className="rounded-xl border-[#ECF0F1]"
-                          >
-                            Cancel
-                          </Button>
-                          <Button
-                            type="submit"
-                            disabled={isUpdating}
-                            className="bg-[#F6CB5A] hover:bg-[#E6B84A] text-[#3C2A1E] font-bold rounded-xl px-8"
-                          >
-                            {isUpdating ? "Updating..." : "Save Changes"}
-                          </Button>
-                        </DialogFooter>
-                      </form>
-                    </DialogContent>
-                  </Dialog>
+                    </Link>
+                  )}
                 </div>
               </div>
             </div>
-          </Card>
-        </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-          {/* Info Section */}
-          <div className="lg:col-span-2 space-y-10">
-            <section className="space-y-6">
-              <h2 className="text-2xl font-bold text-[#3C2A1E] flex items-center">
-                <User className="w-6 h-6 mr-3 text-[#F6CB5A]" />
-                Personal Information
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {[
-                  { label: "Email Address", value: user?.email, icon: Mail },
-                  { label: "Phone Number", value: phone, icon: Smartphone },
-                  { label: "Current Occupation", value: occupation, icon: Briefcase },
-                  { label: "Current Location", value: location, icon: MapPin },
-                  { label: "Age", value: age, icon: Calendar },
-                  { label: "Gender", value: gender, icon: User },
-                ].map((item, i) => (
-                  <div key={i} className="bg-white p-6 rounded-2xl border border-[#ECF0F1] shadow-sm hover:shadow-md transition-shadow">
-                    <p className="text-xs font-bold text-[#7F8C8D] uppercase tracking-widest mb-2">{item.label}</p>
-                    <div className="flex items-center space-x-3">
-                      <div className="p-2 bg-[#FDF8F0] rounded-xl text-[#F6CB5A]">
-                        <item.icon className="w-5 h-5" />
+            {/* Right Column - Info & Bio */}
+            <div className="col-span-2 space-y-6">
+              {/* Info Grid */}
+              <div className="bg-white rounded-3xl shadow-sm border border-[#ECF0F1] p-6">
+                <h3 className="text-lg font-semibold text-[#3C2A1E] mb-4">Personal Information</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  {infoItems.map((item, i) => (
+                    <div key={i} className="flex items-center gap-3 p-4 bg-[#FAFAFA] rounded-xl">
+                      <div className="w-10 h-10 rounded-xl bg-[#FDF8F0] flex items-center justify-center flex-shrink-0">
+                        <item.icon className="w-5 h-5 text-[#F6CB5A]" />
                       </div>
-                      <span className="font-bold text-[#3C2A1E]">{item.value}</span>
+                      <div className="min-w-0">
+                        <p className="text-xs text-[#7F8C8D]">{item.label}</p>
+                        <p className="text-[#3C2A1E] font-medium truncate">{item.value}</p>
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            </section>
-
-            <section className="space-y-6">
-              <h2 className="text-2xl font-bold text-[#3C2A1E] flex items-center">
-                <Sparkles className="w-6 h-6 mr-3 text-[#F6CB5A]" />
-                Bio & Expectations
-              </h2>
-              <div className="bg-white p-8 rounded-2xl border border-[#ECF0F1] shadow-sm italic text-[#7F8C8D] font-medium leading-relaxed">
-                &ldquo;{user?.user_metadata?.bio || "No bio added yet. Tell people about yourself and what you're looking for in a roommate!"}&rdquo;
-              </div>
-            </section>
-          </div>
-
-          {/* Stats/Side Section */}
-          <div className="lg:col-span-1 space-y-10">
-            <Card className="rounded-[32px] border-none shadow-xl p-8 bg-[#3C2A1E] text-white">
-              <h3 className="text-xl font-bold mb-6">Discovery Stats</h3>
-              <div className="space-y-6">
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center">
-                      <Search className="w-5 h-5 text-[#F6CB5A]" />
-                    </div>
-                    <span className="font-bold text-white/70">Searches</span>
-                  </div>
-                  <span className="text-2xl font-bold">124</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center">
-                      <MessageSquare className="w-5 h-5 text-[#F6CB5A]" />
-                    </div>
-                    <span className="font-bold text-white/70">Requests</span>
-                  </div>
-                  <span className="text-2xl font-bold">12</span>
+                  ))}
                 </div>
               </div>
-            </Card>
 
-            <div className="bg-[#F6CB5A] rounded-[32px] p-8 shadow-xl shadow-[#F6CB5A]/10">
-              <h3 className="text-xl font-bold text-[#3C2A1E] mb-2 text-center">Ready to Move?</h3>
-              <p className="text-[#3C2A1E]/70 font-medium text-sm text-center mb-6">Upgrade to Premium to see who viewed your profile.</p>
-              <Button className="w-full bg-[#3C2A1E] hover:bg-[#2A1E14] text-white font-bold h-12 rounded-xl shadow-lg transition-all">
-                Get Premium
-              </Button>
+              {/* Bio Section */}
+              <div className="bg-white rounded-3xl shadow-sm border border-[#ECF0F1] p-6">
+                <h3 className="text-lg font-semibold text-[#3C2A1E] mb-4">About Me</h3>
+                {bio ? (
+                  <p className="text-[#5D6D7E] leading-relaxed">{bio}</p>
+                ) : (
+                  <p className="text-[#7F8C8D] italic">No bio added yet. Click "Edit Profile" to add one.</p>
+                )}
+              </div>
+
+              {/* Quick Links */}
+              <div className="grid grid-cols-2 gap-4">
+                <Link href="/my-listings" className="bg-white rounded-2xl shadow-sm border border-[#ECF0F1] p-5 hover:shadow-md transition-shadow">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-xl bg-[#FDF8F0] flex items-center justify-center">
+                      <Home className="w-6 h-6 text-[#F6CB5A]" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-[#3C2A1E]">My Listings</p>
+                      <p className="text-sm text-[#7F8C8D]">Manage your rooms</p>
+                    </div>
+                  </div>
+                </Link>
+                <Link href="/messages" className="bg-white rounded-2xl shadow-sm border border-[#ECF0F1] p-5 hover:shadow-md transition-shadow">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-xl bg-[#FDF8F0] flex items-center justify-center">
+                      <MessageSquare className="w-6 h-6 text-[#F6CB5A]" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-[#3C2A1E]">Messages</p>
+                      <p className="text-sm text-[#7F8C8D]">View conversations</p>
+                    </div>
+                  </div>
+                </Link>
+              </div>
             </div>
           </div>
         </div>
-      </main>
-    </div>
+      </div>
+    </>
+  );
+}
+
+// Verification Badge Component
+function VerificationBadge({ isVerified, isPending }: { isVerified: boolean; isPending: boolean }) {
+  if (isVerified) {
+    return (
+      <Badge className="bg-green-100 text-green-700 hover:bg-green-100 px-3 py-1">
+        <CheckCircle className="w-3 h-3 mr-1" />
+        Verified
+      </Badge>
+    );
+  }
+  if (isPending) {
+    return (
+      <Badge className="bg-yellow-100 text-yellow-700 hover:bg-yellow-100 px-3 py-1">
+        <Clock className="w-3 h-3 mr-1" />
+        Pending Review
+      </Badge>
+    );
+  }
+  return (
+    <Badge variant="outline" className="text-[#7F8C8D] px-3 py-1">
+      <Shield className="w-3 h-3 mr-1" />
+      Not Verified
+    </Badge>
+  );
+}
+
+// Edit Profile Dialog Component
+function EditProfileDialog({
+  isOpen,
+  setIsOpen,
+  formData,
+  setFormData,
+  onSubmit,
+  isUpdating,
+}: {
+  isOpen: boolean;
+  setIsOpen: (open: boolean) => void;
+  formData: any;
+  setFormData: (data: any) => void;
+  onSubmit: (e: React.FormEvent) => void;
+  isUpdating: boolean;
+}) {
+  return (
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger asChild>
+        <Button className="w-full bg-[#F6CB5A] hover:bg-[#E5BA49] text-[#3C2A1E] font-semibold rounded-xl h-11">
+          <Edit3 className="w-4 h-4 mr-2" />
+          Edit Profile
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Edit Profile</DialogTitle>
+          <DialogDescription>Update your personal information</DialogDescription>
+        </DialogHeader>
+        <form onSubmit={onSubmit} className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="full_name">Full Name</Label>
+              <Input
+                id="full_name"
+                value={formData.full_name}
+                onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
+              />
+            </div>
+            <div>
+              <Label htmlFor="phone">Phone</Label>
+              <Input
+                id="phone"
+                value={formData.phone}
+                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="occupation">Occupation</Label>
+              <Input
+                id="occupation"
+                value={formData.occupation}
+                onChange={(e) => setFormData({ ...formData, occupation: e.target.value })}
+              />
+            </div>
+            <div>
+              <Label htmlFor="current_location">Location</Label>
+              <Input
+                id="current_location"
+                value={formData.current_location}
+                onChange={(e) => setFormData({ ...formData, current_location: e.target.value })}
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="age">Age</Label>
+              <Input
+                id="age"
+                type="number"
+                value={formData.age}
+                onChange={(e) => setFormData({ ...formData, age: e.target.value })}
+              />
+            </div>
+            <div>
+              <Label htmlFor="gender">Gender</Label>
+              <Select value={formData.gender} onValueChange={(v) => setFormData({ ...formData, gender: v })}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="male">Male</SelectItem>
+                  <SelectItem value="female">Female</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div>
+            <Label htmlFor="user_type">I am a</Label>
+            <Select value={formData.user_type} onValueChange={(v) => setFormData({ ...formData, user_type: v })}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="seeker">Room Seeker</SelectItem>
+                <SelectItem value="provider">Room Provider</SelectItem>
+                <SelectItem value="both">Both</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label htmlFor="bio">Bio</Label>
+            <Textarea
+              id="bio"
+              placeholder="Tell others about yourself..."
+              value={formData.bio}
+              onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
+              rows={3}
+            />
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={isUpdating} className="bg-[#F6CB5A] hover:bg-[#E5BA49] text-[#3C2A1E]">
+              {isUpdating ? "Saving..." : "Save Changes"}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }

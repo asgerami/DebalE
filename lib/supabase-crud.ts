@@ -172,3 +172,60 @@ export async function uploadProfilePhoto(file: File, userId: string) {
   if (error) throw error;
   return data;
 }
+
+
+// --- Saved Listings ---
+export async function getSavedListings(userId: string) {
+  const { data, error } = await supabase
+    .from("saved_listings")
+    .select("listing_id")
+    .eq("user_id", userId);
+  if (error) throw error;
+  return data?.map((item) => item.listing_id) || [];
+}
+
+export async function saveListing(userId: string, listingId: string) {
+  const { data, error } = await supabase
+    .from("saved_listings")
+    .insert([{ user_id: userId, listing_id: listingId }])
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function unsaveListing(userId: string, listingId: string) {
+  const { error } = await supabase
+    .from("saved_listings")
+    .delete()
+    .eq("user_id", userId)
+    .eq("listing_id", listingId);
+  if (error) throw error;
+}
+
+export async function isListingSaved(userId: string, listingId: string) {
+  const { data, error } = await supabase
+    .from("saved_listings")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("listing_id", listingId)
+    .single();
+  if (error && error.code !== "PGRST116") throw error; // PGRST116 = no rows found
+  return !!data;
+}
+
+// --- Paginated Listings ---
+export async function getActiveListingsPaginated(page: number = 1, limit: number = 9) {
+  const from = (page - 1) * limit;
+  const to = from + limit - 1;
+
+  const { data, error, count } = await supabase
+    .from("listings")
+    .select("*", { count: "exact" })
+    .eq("is_active", true)
+    .order("created_at", { ascending: false })
+    .range(from, to);
+
+  if (error) throw error;
+  return { listings: data as Listing[], total: count || 0 };
+}
