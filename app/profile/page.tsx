@@ -201,9 +201,22 @@ function ProfileContent() {
                 <div className="flex-1 pb-2">
                   <div className="flex items-center justify-center md:justify-start space-x-3 mb-2">
                     <h1 className="text-4xl font-bold text-[#3C2A1E]">{fullName}</h1>
-                    <Badge className="bg-green-50 text-green-600 border-green-100 px-3 py-1 text-xs">
-                      Verified Member
-                    </Badge>
+                    {user?.user_metadata?.id_verified ? (
+                      <Badge className="bg-green-50 text-green-600 border-green-100 px-3 py-1 text-xs">
+                        <Shield className="w-3 h-3 mr-1" />
+                        ID Verified
+                      </Badge>
+                    ) : user?.user_metadata?.verification_status === "pending" ? (
+                      <Badge className="bg-yellow-50 text-yellow-600 border-yellow-100 px-3 py-1 text-xs">
+                        Verification Pending
+                      </Badge>
+                    ) : (
+                      <Link href="/verify">
+                        <Badge className="bg-gray-50 text-gray-600 border-gray-200 px-3 py-1 text-xs cursor-pointer hover:bg-gray-100">
+                          Get Verified
+                        </Badge>
+                      </Link>
+                    )}
                   </div>
                   <p className="text-lg font-medium text-[#7F8C8D] flex items-center justify-center md:justify-start">
                     <MapPin className="w-4 h-4 mr-2 text-[#F6CB5A]" />
