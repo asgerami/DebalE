@@ -142,15 +142,20 @@ function MessagesContent() {
   const { user } = useAuth();
   const router = useRouter();
 
-  const [selectedConversation, setSelectedConversation] = useState<typeof mockConversations[0] | null>(null);
+  const [selectedConversation, setSelectedConversation] = useState<typeof mockConversations[0] | null>(mockConversations[0]);
   const [newMessage, setNewMessage] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
 
-  // For now, use mock data until we implement real messaging
-  // TODO: Integrate with Supabase real-time messaging
+  // TODO: Replace with real Supabase data
+  // For now using mock data - need to implement:
+  // 1. Fetch user's matches from database
+  // 2. Get messages for each match
+  // 3. Subscribe to real-time message updates
   const handleSendMessage = async () => {
     if (newMessage.trim() && selectedConversation) {
-      // TODO: Send message via Supabase
+      // TODO: Implement real message sending
+      // const { sendMessage } = await import("@/lib/supabase-crud");
+      // await sendMessage(matchId, user.id, newMessage);
       console.log("Sending message:", newMessage);
       setNewMessage("");
     }
@@ -163,8 +168,16 @@ function MessagesContent() {
   );
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 flex flex-col">
-      <div className="grid lg:grid-cols-3 gap-6 h-[calc(100vh-200px)]">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 flex-col">
+      {/* Demo Notice */}
+      <div className="mb-6 bg-blue-50 border border-blue-200 rounded-xl p-4">
+        <p className="text-sm text-blue-800">
+          <strong>Demo Mode:</strong> This messaging interface is currently showing sample conversations. 
+          Real-time messaging will be enabled once you have active matches with other users.
+        </p>
+      </div>
+      
+      <div className="grid lg:grid-cols-3 gap-6 h-[calc(100vh-280px)]">
         {/* Conversations List */}
         <div className="lg:col-span-1">
           <Card className="bg-[#FFFEF7] border border-[#ECF0F1] rounded-xl shadow-sm h-full">
@@ -191,7 +204,7 @@ function MessagesContent() {
                   <button
                     key={conversation.id}
                     onClick={() => setSelectedConversation(conversation)}
-                    className={`w-full p-4 border-b border-[#ECF0F1] hover:bg-[#FDF8F0] transition-colors text-left ${selectedConversation.id === conversation.id
+                    className={`w-full p-4 border-b border-[#ECF0F1] hover:bg-[#FDF8F0] transition-colors text-left ${selectedConversation?.id === conversation.id
                       ? "bg-[#FDF8F0] border-r-2 border-r-[#F6CB5A]"
                       : ""
                       }`}
@@ -244,6 +257,15 @@ function MessagesContent() {
 
         {/* Chat Area */}
         <div className="lg:col-span-2">
+          {!selectedConversation ? (
+            <Card className="bg-[#FFFEF7] border border-[#ECF0F1] rounded-xl shadow-sm h-full flex items-center justify-center">
+              <div className="text-center p-8">
+                <Search className="w-16 h-16 text-[#F6CB5A] mx-auto mb-4" />
+                <h3 className="text-xl font-bold text-[#3C2A1E] mb-2">No Conversation Selected</h3>
+                <p className="text-[#7F8C8D]">Select a conversation to start messaging</p>
+              </div>
+            </Card>
+          ) : (
           <Card className="bg-[#FFFEF7] border border-[#ECF0F1] rounded-xl shadow-sm h-full">
             <CardContent className="p-0 h-full flex flex-col">
               {/* Chat Header */}
@@ -412,6 +434,7 @@ function MessagesContent() {
               </div>
             </CardContent>
           </Card>
+          )}
         </div>
       </div>
     </div>

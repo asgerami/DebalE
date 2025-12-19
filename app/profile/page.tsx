@@ -49,6 +49,7 @@ import {
   Briefcase,
   Smartphone,
   ShieldCheck,
+  Camera,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -88,6 +89,7 @@ function ProfileContent() {
 
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [editFormData, setEditFormData] = useState({
     full_name: fullName,
     phone: phone !== "Not specified" ? phone : "",
@@ -100,6 +102,35 @@ function ProfileContent() {
   });
 
   const { updateProfile } = useAuth();
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+
+    setIsUploadingAvatar(true);
+    try {
+      const { uploadProfilePhoto } = await import("@/lib/supabase-crud");
+      const { supabase } = await import("@/lib/supabase");
+      
+      // Upload photo
+      const result = await uploadProfilePhoto(file, user.id);
+      
+      // Get public URL
+      const { data: urlData } = supabase.storage
+        .from("profile-photos")
+        .getPublicUrl(result.path);
+      
+      // Update user metadata with avatar URL
+      await updateProfile({ avatar_url: urlData.publicUrl });
+      
+      toast.success("Profile photo updated successfully!");
+    } catch (error: any) {
+      console.error("Error uploading avatar:", error);
+      toast.error(error.message || "Failed to upload photo");
+    } finally {
+      setIsUploadingAvatar(false);
+    }
+  };
 
   useEffect(() => {
     if (user) {
@@ -146,12 +177,27 @@ function ProfileContent() {
             </div>
             <div className="px-10 pb-12 -mt-20 relative">
               <div className="flex flex-col md:flex-row md:items-end gap-8 text-center md:text-left">
-                <Avatar className="h-40 w-40 border-8 border-white shadow-2xl mx-auto md:mx-0">
-                  <AvatarImage src={user?.user_metadata?.avatar_url} />
-                  <AvatarFallback className="bg-[#F6CB5A] text-[#3C2A1E] text-5xl font-bold">
-                    {getUserInitials(fullName)}
-                  </AvatarFallback>
-                </Avatar>
+                <div className="relative mx-auto md:mx-0">
+                  <Avatar className="h-40 w-40 border-8 border-white shadow-2xl">
+                    <AvatarImage src={user?.user_metadata?.avatar_url} />
+                    <AvatarFallback className="bg-[#F6CB5A] text-[#3C2A1E] text-5xl font-bold">
+                      {getUserInitials(fullName)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <label
+                    htmlFor="avatar-upload"
+                    className="absolute bottom-2 right-2 bg-[#F6CB5A] hover:bg-[#E6B84A] text-[#3C2A1E] p-3 rounded-full cursor-pointer shadow-lg transition-all"
+                  >
+                    <Camera className="w-5 h-5" />
+                    <input
+                      id="avatar-upload"
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleAvatarUpload}
+                    />
+                  </label>
+                </div>
                 <div className="flex-1 pb-2">
                   <div className="flex items-center justify-center md:justify-start space-x-3 mb-2">
                     <h1 className="text-4xl font-bold text-[#3C2A1E]">{fullName}</h1>

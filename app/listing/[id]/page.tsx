@@ -22,6 +22,9 @@ import {
   Mail,
   Camera,
   Loader2,
+  X,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -44,6 +47,8 @@ export default function ListingDetailPage() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [message, setMessage] = useState("");
   const [showContactForm, setShowContactForm] = useState(false);
+  const [isFullscreenOpen, setIsFullscreenOpen] = useState(false);
+  const [fullscreenImageIndex, setFullscreenImageIndex] = useState(0);
 
   useEffect(() => {
     async function fetchListingData() {
@@ -103,6 +108,61 @@ export default function ListingDetailPage() {
 
   // Get images to display (use photos from storage or placeholder)
   const displayImages = photos.length > 0 ? photos : [PLACEHOLDER_IMAGE];
+
+  // Fullscreen image handlers
+  const openFullscreen = (index: number) => {
+    setFullscreenImageIndex(index);
+    setIsFullscreenOpen(true);
+  };
+
+  const closeFullscreen = () => {
+    setIsFullscreenOpen(false);
+  };
+
+  const nextImage = () => {
+    setFullscreenImageIndex((prev) => (prev + 1) % displayImages.length);
+  };
+
+  const prevImage = () => {
+    setFullscreenImageIndex((prev) => (prev - 1 + displayImages.length) % displayImages.length);
+  };
+
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!isFullscreenOpen) return;
+      if (e.key === "Escape") closeFullscreen();
+      if (e.key === "ArrowRight") nextImage();
+      if (e.key === "ArrowLeft") prevImage();
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isFullscreenOpen, displayImages.length]);
+
+  // Touch/swipe support
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
+
+  const minSwipeDistance = 50;
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+    if (isLeftSwipe) nextImage();
+    if (isRightSwipe) prevImage();
+  };
 
   if (loading) {
     return (
@@ -173,13 +233,13 @@ export default function ListingDetailPage() {
           <div className="lg:col-span-2 space-y-8">
             {/* Image Gallery */}
             <div className="space-y-4">
-              <div className="relative">
+              <div className="relative cursor-pointer" onClick={() => openFullscreen(currentImageIndex)}>
                 <Image
                   src={displayImages[currentImageIndex] || PLACEHOLDER_IMAGE}
                   alt={listing.title}
                   width={600}
                   height={400}
-                  className="w-full h-96 object-cover rounded-xl"
+                  className="w-full h-96 object-cover rounded-xl hover:opacity-95 transition-opacity"
                 />
                 {listing.featured && (
                   <Badge className="absolute top-4 left-4 bg-[#F6CB5A] text-[#3C2A1E] px-3 py-1">
@@ -205,8 +265,11 @@ export default function ListingDetailPage() {
                   {displayImages.map((image, index) => (
                     <button
                       key={index}
-                      onClick={() => setCurrentImageIndex(index)}
-                      className={`relative rounded-lg overflow-hidden ${
+                      onClick={() => {
+                        setCurrentImageIndex(index);
+                        openFullscreen(index);
+                      }}
+                      className={`relative rounded-lg overflow-hidden hover:opacity-80 transition-opacity ${
                         currentImageIndex === index ? "ring-2 ring-[#F6CB5A]" : ""
                       }`}
                     >
@@ -460,6 +523,91 @@ export default function ListingDetailPage() {
           </div>
         </div>
       </div>
+
+      {/* Fullscreen Image Viewer */}
+      {isFullscreenOpen && (
+        <div 
+          className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center"
+          onTouchStart={onTouchStart}
+          onTouchMove={onTouchMove}
+          onTouchEnd={onTouchEnd}
+        >
+          {/* Close Button */}
+          <button
+            onClick={closeFullscreen}
+            className="absolute top-4 right-4 z-50 bg-white/10 hover:bg-white/20 text-white p-3 rounded-full transition-all"
+          >
+            <X className="w-6 h-6" />
+          </button>
+
+          {/* Image Counter */}
+          <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-50 bg-black/50 text-white px-4 py-2 rounded-full text-sm font-medium">
+            {fullscreenImageIndex + 1} / {displayImages.length}
+          </div>
+
+          {/* Previous Button */}
+          {displayImages.length > 1 && (
+            <button
+              onClick={prevImage}
+              className="absolute left-4 z-50 bg-white/10 hover:bg-white/20 text-white p-4 rounded-full transition-all"
+            >
+              <ChevronLeft className="w-8 h-8" />
+            </button>
+          )}
+
+          {/* Image */}
+          <div className="relative w-full h-full flex items-center justify-center p-4">
+            <Image
+              src={displayImages[fullscreenImageIndex] || PLACEHOLDER_IMAGE}
+              alt={`${listing.title} - Image ${fullscreenImageIndex + 1}`}
+              width={1920}
+              height={1080}
+              className="max-w-full max-h-full object-contain"
+              priority
+            />
+          </div>
+
+          {/* Next Button */}
+          {displayImages.length > 1 && (
+            <button
+              onClick={nextImage}
+              className="absolute right-4 z-50 bg-white/10 hover:bg-white/20 text-white p-4 rounded-full transition-all"
+            >
+              <ChevronRight className="w-8 h-8" />
+            </button>
+          )}
+
+          {/* Thumbnail Strip */}
+          {displayImages.length > 1 && (
+            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-50 flex space-x-2 bg-black/50 p-3 rounded-xl max-w-full overflow-x-auto">
+              {displayImages.map((image, index) => (
+                <button
+                  key={index}
+                  onClick={() => setFullscreenImageIndex(index)}
+                  className={`relative flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden transition-all ${
+                    fullscreenImageIndex === index
+                      ? "ring-2 ring-[#F6CB5A] opacity-100"
+                      : "opacity-50 hover:opacity-75"
+                  }`}
+                >
+                  <Image
+                    src={image || PLACEHOLDER_IMAGE}
+                    alt={`Thumbnail ${index + 1}`}
+                    width={64}
+                    height={64}
+                    className="w-full h-full object-cover"
+                  />
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Swipe Instructions */}
+          <div className="absolute bottom-24 left-1/2 transform -translate-x-1/2 z-40 text-white/50 text-xs">
+            Use arrow keys or click buttons to navigate
+          </div>
+        </div>
+      )}
     </div>
   );
 }
