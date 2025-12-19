@@ -37,7 +37,7 @@ const steps = [
       "Verification with phone number and optional ID",
     ],
     image:
-      "https://images.unsplash.com/photo-1531482615713-2afd69097998?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1589156280159-27698a70f29e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
   },
   {
     step: 2,
@@ -52,7 +52,7 @@ const steps = [
       "Cultural and language preferences",
     ],
     image:
-      "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1600880292203-757bb62b4baf?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
   },
   {
     step: 3,
@@ -67,7 +67,7 @@ const steps = [
       "Community guidelines and support",
     ],
     image:
-      "https://images.unsplash.com/photo-1531482615713-2afd69097998?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1543269865-cbf427effbad?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
   },
 ];
 
@@ -132,9 +132,6 @@ export default function HowItWorksPage() {
       {/* Hero Section */}
       <section className="py-16 bg-gradient-to-br from-[#FDF8F0] to-[#FFFEF7]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <Badge className="bg-[#FDF8F0] text-[#F6CB5A] border-[#F6CB5A] px-4 py-2 mb-6">
-            🇪🇹 Made for Ethiopia
-          </Badge>
           <h1 className="text-4xl md:text-5xl font-bold text-[#3C2A1E] mb-6">
             How DebalE Works
           </h1>

@@ -31,9 +31,6 @@ export default function LandingPage() {
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="space-y-8">
               <div className="space-y-4">
-                <Badge className="bg-[#FDF8F0] text-[#F6CB5A] border-[#F6CB5A] px-4 py-2">
-                  🇪🇹 Made for Ethiopia
-                </Badge>
                 <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-[#3C2A1E] leading-tight">
                   Find Your Perfect
                   <span className="text-[#F6CB5A]"> Roommate</span> in Ethiopia
@@ -60,36 +57,16 @@ export default function LandingPage() {
                 </Link>
               </div>
 
-              <div className="flex items-center space-x-8 pt-4">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-[#3C2A1E]">
-                    5,000+
-                  </div>
-                  <div className="text-sm text-[#7F8C8D]">Active Users</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-[#3C2A1E]">
-                    1,200+
-                  </div>
-                  <div className="text-sm text-[#7F8C8D]">
-                    Successful Matches
-                  </div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-[#3C2A1E]">15+</div>
-                  <div className="text-sm text-[#7F8C8D]">Cities</div>
-                </div>
-              </div>
             </div>
 
             <div className="relative">
               <div className="bg-gradient-to-br from-[#FDF8F0] to-[#FFFEF7] rounded-2xl p-8 shadow-xl">
                 <Image
-                  src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1471&q=80"
-                  alt="Ethiopian students and young professionals studying together"
+                  src="/images/hero-ethiopian.png"
+                  alt="Ethiopian students and young professionals"
                   width={500}
                   height={400}
-                  className="rounded-xl w-full"
+                  className="rounded-xl w-full object-cover"
                 />
                 <div className="absolute -bottom-4 -left-4 bg-[#FFFEF7] rounded-lg p-4 shadow-lg border border-[#ECF0F1]">
                   <div className="flex items-center space-x-2">
